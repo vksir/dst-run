@@ -3,227 +3,241 @@
 import os
 import re
 import json
+import subprocess
 from time import strftime, localtime
-from icecream import ic
 
 HOME = os.environ['HOME']
 
-STEAMCMD = '%s/steamcmd' % HOME
-DST_DIR = '%s/dst' % HOME
-DST_SERVER = '%s/bin/dontstarve_dedicated_server_nullrenderer' % DST_DIR
-CLUSTER_DIR = '%s/.klei/DoNotStarveTogether' % HOME
-CLUSTER_BACKUP_DIR = '%s/.klei/DoNotStarveTogether/backup' % HOME
-CLUSTER_NAME = 'MyDediServer'
+PROGRAM_PATH = '{}/dst_run'.format(HOME)
+TEMPLATE_PATH = '{}/dst_run/cluster_template'.format(HOME)
 
+PROGRAM_HOME_PATH = '{}/.dst_run'.format(HOME)
+CFG_FILE = '{}/.dst_run/config.json'.format(HOME)
+LOG_FILE = '{}/.dst_run/dst_run.log'.format(HOME)
 
-def update_mod_cfg(dst_dir, cluster_dir, cluster_name):
-    cluster_path = '%s/%s' % (cluster_dir, cluster_name)
-    master_mod_overrides_path = '%s/Master/modoverrides.lua' % cluster_path
-    caves_mod_overrides_path = '%s/Caves/modoverrides.lua' % cluster_path
-    mod_cfg_path = '%s/mods/dedicated_server_mods_setup.lua' % dst_dir
-
-    # 生成 mod 安装文件
-    with open(master_mod_overrides_path, 'r', encoding='utf-8') as f:
-        data = f.read()
-    mod = re.findall(r'(?<="workshop-).*?(?=")', data)
-
-    with open(mod_cfg_path, 'w') as f:
-        for i in mod:
-            f.write('ServerModSetup("' + i + '")\n')
-
-    # 保证 Master 和 Cave 的 mod 文件一致
-    os.system('cp %s %s' % (master_mod_overrides_path, caves_mod_overrides_path))
-
-
-def run_cmd(*cmd: str, cwd=None, sudo=False):
-    tmp = os.getcwd()
-    if cwd:
-        os.chdir(cwd)
-
-    for i in cmd:
-        if sudo:
-            i += 'sudo '
-        os.system(i)
-
-    os.chdir(tmp)
+STEAMCMD_PATH = '{}/steamcmd'.format(HOME)
+DST_PATH = '{}/dst'.format(HOME)
+CLUSTERS_PATH = '{}/.klei/DoNotStarveTogether'.format(HOME)
+CLUSTERS_BACKUP_PATH = '{}/.klei/DoNotStarveTogether/backup'.format(HOME)
 
 
 class Server:
     def __init__(self):
-        self.__home = '%s/.dst_run' % HOME
-        if not os.path.exists(self.__home):
-            run_cmd('mkdir -p %s' % self.__home)
-        self.__cfg_file = '%s/config.json' % self.__home
-
-        self.__log_file = '%s/dst_run.log' % self.__home
-        run_cmd('rm %s' % self.__log_file)
-
-        self.cfg = self.__read_cfg()
+        pass
 
     def __run(self):
-        self.cfg = self.__read_cfg()
-        cluster = self.cfg['cluster']
+        cfg = self.__read_cfg()
+        cluster = 'reforged' if cfg['enable_reforged'] else cfg['cluster']
 
-        update_mod_cfg(DST_DIR, CLUSTER_DIR, cluster)
-        cmd = '%s -console -cluster %s' % (DST_SERVER, cluster)
-        run_cmd(
-            r'%s -shard Caves | sed "s/^/Caves:  /" & '
-            r'%s -shard Master | sed "s/^/Master:  /"' % (cmd, cmd), cwd='%s/bin' % DST_DIR
-        )
+        cmd = '{}/bin/dontstarve_dedicated_server_nullrenderer -console -cluster {}'.format(DST_PATH, cluster)
+        self.__set_mod_setup()
+        if cfg['enable_caves']:
+            run_cmd('{0} -shard Caves | sed "s/^/Caves:  /" & '
+                    '{0} -shard Master | sed "s/^/Master:  /"'.format(cmd), cwd='%s/bin' % DST_PATH)
+        else:
+            run_cmd('{} -shard Master | sed "s/^/Master:  /"'.format(cmd), cwd='{}/bin'.format(DST_PATH))
 
-    def __server_update(self):
-        run_cmd('%s '
-                '+force_install_dir %s '
-                '+login anonymous '
-                '+app_update 343050 '
-                'validate '
-                '+quit' % ('%s/steamcmd.sh' % STEAMCMD, DST_SERVER))
+    def __server_update(self, is_dev=False):
+        if not is_dev:
+            run_cmd('{}/steamcmd.sh '
+                    '+force_install_dir {} '
+                    '+login anonymous '
+                    '+app_update 343050 '
+                    'validate '
+                    '+quit'.format(STEAMCMD_PATH, DST_PATH))
+        else:
+            pass
 
+    def __create_cluster(self, template='default'):
+        # TODO
+        cfg = self.__read_cfg()
+        cluster = cfg['cluster']
+        cluster_path = '{}/{}'.format(CLUSTERS_PATH, cluster)
+        if os.path.exists(cluster_path):
+            run_cmd('rm -rf {}'.format(cluster_path))
+        run_cmd('cp -rf {}/{} {}'.format(TEMPLATE_PATH, template, cluster_path))
+        with open('{}/{}/cluster_token.txt'.format(CLUSTERS_PATH, cluster), 'w', encoding='utf-8') as f:
+            f.write(cfg['cluster_token'])
+
+    def __backup_cluster(self, cluster: str):
+        if os.path.exists('{}/{}'.format(CLUSTERS_PATH, cluster)):
+            file_name = strftime('{}_%Y-%m-%d-%H-%M-%S'.format(cluster), localtime())
+            run_cmd('tar -czvf {}/{}.tar.gz {}'.format(CLUSTERS_BACKUP_PATH, file_name, cluster), cwd=CLUSTERS_PATH)
 
     def run(self):
-        self.show_info()
-        print(
-            'What to do?\n'
-            '------ Start ------\n'
-            '  (1) Run\n'
-            '  (2) Update/Run\n'
-            '  (3) New Cluster\n'
-            '------ Setting ------\n'
-            '  (4) World Setting\n'
-            '  (5) Mods Setting\n'
-            '------ Others ------'
-            '  (6) Cluster Management\n'
-            '  (7) Reinstall\n'
-            '  (8) Exit\n'
-        )
-        user_in = input()
-
-        if user_in == '1':
-            self.__run()
-        elif user_in == '2':
-            self.__server_update()
-            self.__run()
-        elif user_in == '3':
-            if self.cfg['enable_reforged']:
-                print('Permission denied, for your server type is Reforged.')
-            else:
-                user_in_2 = input('Are you sure to generate a new cluster? (y/n)')
-                if user_in_2 == 'y':
-                    user_in_3 = input('Backup the current cluster? (y/n)')
-                    cluster = self.cfg['cluster']
-                    cluster_path = '%s/%s' % (CLUSTER_DIR, cluster)
-                    if not user_in_3 == 'n':
-                        self.__backup(cluster)
-                    if os.path.exists(cluster_path):
-                        run_cmd('rm -rf %s/*' % cluster_path)
-                    else:
-                        run_cmd('mkdir -p %s' % cluster_path)
-
-
-
-        elif user_in == '6':
-            self.show_info()
+        while True:
+            cfg = self.__read_cfg()
+            self.__show_info(cfg)
             print(
-                'What to do? (Print "e" to exit.)\n'
-                '----------- Choose Server Type -----------\n'
-                '  (1) Master & Caves\n'
-                '  (2) Only Master\n'
-                '  (3) Reforged\n'
-                '------------ Choose Cluster ------------\n'
-                '  (4) MyDediServer\n'
-                '  (5) MyDediServer2\n'
-                '  (6) MyDediServer3'
+                'What to do?\n'
+                '------ Start ------\n'
+                '  (1) Run\n'
+                '  (2) Update/Run\n'
+                '  (3) New Cluster\n'
+                '------ Setting ------\n'
+                '  (4) World Setting\n'
+                '  (5) Mods Setting\n'
+                '------ Others ------\n'
+                '  (6) Cluster Management\n'
+                '  (7) Reinstall\n'
+                '  (8) Exit\n'
             )
-            user_in_2 = input()
-            if user_in_2 == '1':
-                self.cfg['enable_reforged'] = False
-                self.cfg['enable_caves'] = True
-            elif user_in_2 == '2':
-                self.cfg['enable_reforged'] = False
-                self.cfg['enable_caves'] = False
-            elif user_in_2 == '3':
-                self.cfg['enable_reforged'] = True
-            elif user_in_2 == '4':
-                self.cfg['cluster'] = 'MyDediServer'
-            elif user_in_2 == '5':
-                self.cfg['cluster'] = 'MyDediServer2'
-            elif user_in_2 == '6':
-                self.cfg['cluster'] = 'MyDediServer3'
-        elif user_in == '4':
-            pass
-        elif user_in == '5':
-            try:
+            user_in = input()
 
-                run_cmd('apt install libstdc++6:i386 libgcc1:i386 libcurl4-gnutls-dev:i386 -y',
-                        'mkdir -p %s' % STEAMCMD,
-                        'wget "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz"',
-                        'tar -xzvf steamcmd_linux.tar.gz',
-                        'rm steamcmd_linux.tar.gz', cwd=STEAMCMD, sudo=True)
-                self.__server_update()
-            except Exception as e:
-                self.__log(str(e))
-                print(e)
-                exit(1)
+            if user_in == '1' or user_in == '2':
+                if not os.path.exists('{}/{}'.format(CLUSTERS_PATH, cfg['cluster'])):
+                    if cfg['enable_reforged']:
+                        self.__create_cluster(template='reforged')
+                    else:
+                        self.__create_cluster()
 
-    def show_info(self):
-        # version = self.cfg['version']
-        cluster = self.cfg['cluster']
+                if user_in == '2':
+                    self.__server_update()
+                self.__run()
+            elif user_in == '3':
+                if cfg['enable_reforged']:
+                    print('Permission denied, for your server type is Reforged.')
+                else:
+                    user_in_2 = input('Are you sure to generate a new cluster? (y/n)')
+                    if user_in_2 == 'y':
+                        user_in_3 = input('Backup the current cluster? (y/n)')
+                        if not user_in_3 == 'n':
+                            self.__backup_cluster(cfg['cluster'])
+                        self.__create_cluster()
+            elif user_in == '4':
+                # TODO
+                pass
+            elif user_in == '5':
+                # TODO
+                pass
+            elif user_in == '6':
+                self.__show_info(cfg)
+                print(
+                    'What to do? (Print "e" to exit.)\n'
+                    '----------- Choose Server Type -----------\n'
+                    '  (1) Master & Caves\n'
+                    '  (2) Only Master\n'
+                    '  (3) Reforged\n'
+                    '------------ Choose Cluster ------------\n'
+                    '  (4) Cluster_1\n'
+                    '  (5) Cluster_2\n'
+                    '  (6) Cluster_3'
+                )
+                user_in_2 = input()
+                if user_in_2 == '1':
+                    cfg['enable_reforged'] = False
+                    cfg['enable_caves'] = True
+                elif user_in_2 == '2':
+                    cfg['enable_reforged'] = False
+                    cfg['enable_caves'] = False
+                elif user_in_2 == '3':
+                    cfg['enable_reforged'] = True
+                    cfg['enable_caves'] = False
+                elif user_in_2 == '4':
+                    cfg['cluster'] = 'Cluster_1'
+                elif user_in_2 == '5':
+                    cfg['cluster'] = 'Cluster_2'
+                elif user_in_2 == '6':
+                    cfg['cluster'] = 'Cluster_3'
+                self.__save_cfg(cfg)
+            elif user_in == '7':
+                # TODO
+                try:
+                    run_cmd('apt install libstdc++6:i386 libgcc1:i386 libcurl4-gnutls-dev:i386 -y',
+                            'mkdir -p %s' % STEAMCMD_PATH,
+                            'wget "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz"',
+                            'tar -xzvf steamcmd_linux.tar.gz',
+                            'rm steamcmd_linux.tar.gz', cwd=STEAMCMD_PATH, sudo=True)
+                    self.__server_update()
+                except Exception as e:
+                    log(str(e))
+                    print(e)
+                    exit(1)
+            elif user_in == '8':
+                exit()
+            else:
+                pass
+
+    def __show_info(self, cfg: dict):
+        # TODO
+
+        cluster = cfg['cluster']
+        # version = cfg['version']
 
         # run_cmd('clear')
         print(
             '==================== DST_Run ====================\n'
-            'Room Name:\t\t\t\t%s\n'
-            'Password:\t\t\t\t%s\n'
-            'Directly connection:\t%s\n'
+            'Room Name:\t\t\t\t{}\n'
+            'Password:\t\t\t\t{}\n'
+            'Directly connection:\t{}\n'
             '\n'
-            'Cluster Name:\t\t\t%s\n'
-            'Server Version:\t\t\t%s\n'
-            '============= By Villkiss (Ver 1.1.0)============='
-            % ('Name', '6666', 'Code', cluster, '66666')
+            'Cluster Name:\t\t\t{}\n'
+            'Server Version:\t\t\t{}\n'
+            '============= By Villkiss (Ver 1.1.0)=============\n'.format('Name', '6666', 'Code',
+                                                                          cluster, '66666')
         )
 
     def __init_cfg(self) -> dict:
-        cluster_token = input('Please input your cluster_token:')
+        cluster_token = input('No cluster_token found.\nPlease input your cluster_token: ')
         cfg = {
-            'cluster': 'MyDediServer',
+            'cluster': 'Cluster_1',
             'enable_reforged': False,
             'enable_caves': True,
             'cluster_token': cluster_token,
             'world_setting': {
 
-            },
-            'default_mod_setting': {
-                'Global Position':
-            },
-
-            'mod_setting': {}
+            }
         }
         self.__save_cfg(cfg)
         return cfg
 
     def __read_cfg(self) -> dict:
         try:
-            with open(self.__cfg_file, 'r', encoding='utf-8') as f:
+            with open(CFG_FILE, 'r', encoding='utf-8') as f:
                 data = f.read()
             return json.loads(data)
         except Exception as e:
-            self.__log(str(e))
+            log(str(e))
             return self.__init_cfg()
 
     def __save_cfg(self, cfg: dict):
-        with open(self.__cfg_file, 'w', encoding='utf-8') as f:
+        with open(CFG_FILE, 'w', encoding='utf-8') as f:
             f.write(json.dumps(cfg))
 
-    def __log(self, s):
-        with open(self.__log_file, 'w+', encoding='utf-8') as f:
-            f.write(s + '\n')
+    def __set_mod_setup(self):
+        cfg = self.__read_cfg()
+        cluster = 'reforged' if cfg['enable_reforged'] else cfg['cluster']
 
-    def __backup(self, cluster_name):
-        cluster_path = '%s/%s' % (CLUSTER_DIR, cluster_name)
-        if os.path.exists(cluster_path):
-            file_name = strftime('Cluster_%Y-%m-%d-%H-%M-%S', localtime())
-            run_cmd('mkdir -p %s' % CLUSTER_BACKUP_DIR,
-                    'tar -czvf %s/%s.tar.gz %s' % (CLUSTER_BACKUP_DIR, file_name, cluster_path))
+        master_modoverrides_file = '{}/{}/Master/modoverrides.lua'.format(CLUSTERS_PATH, cluster)
+        caves_modoverrides_file = '{}/{}/Caves/modoverrides.lua'.format(CLUSTERS_PATH, cluster)
+        mod_setup_file = '{}/mods/dedicated_server_mods_setup.lua'.format(DST_PATH)
+
+        # 生成 mod 安装文件
+        with open(master_modoverrides_file, 'r', encoding='utf-8') as f:
+            data = f.read()
+        mod = re.findall(r'(?<="workshop-).*?(?=")', data)
+
+        with open(mod_setup_file, 'w') as f:
+            for i in mod:
+                f.write('ServerModSetup("' + i + '")\n')
+
+        # 保证 Master 和 Caves 的 mod 文件一致
+        if cfg['enable_caves']:
+            run_cmd('cp -f %s %s' % (master_modoverrides_file, caves_modoverrides_file))
+
+
+def run_cmd(*cmd: str, cwd=None, sudo=False):
+    for i in cmd:
+        if sudo:
+            i += 'sudo '
+        proc = subprocess.run(i, shell=True, cwd=cwd, stderr=subprocess.PIPE, encoding='utf-8')
+        if proc.stderr:
+            log(proc.stderr)
+
+
+def log(s: str):
+    with open(LOG_FILE, 'w+', encoding='utf-8') as f:
+        f.write(strftime('[%Y-%m-%d-%H-%M-%S] {}\n'.format(s), localtime()))
 
 
 
@@ -237,13 +251,13 @@ class Server:
 #     if [ $chose == "1" ]
 #     then
 #         echo "Print Modoverrides:"
-#         python3 ./mod_add.py "${cluster_dir}/${cluster_name}/Master/modoverrides.lua" "modoverrides"
+#         python3 ./mod_add.py "${cluster_dir}/${cluster}/Master/modoverrides.lua" "modoverrides"
 #         set_mod
 #         echo "Add success."
 #     elif [ $chose == "2" ]
 #     then
 #         echo "Print Mod ID:"
-#         python3 ./mod_add.py "${cluster_dir}/${cluster_name}/Master/modoverrides.lua" "modid"
+#         python3 ./mod_add.py "${cluster_dir}/${cluster}/Master/modoverrides.lua" "modid"
 #         set_mod
 #         echo "Add success."
 #     elif [ $chose == "3" ]     # Exit
@@ -253,42 +267,16 @@ class Server:
 #         echo "Command Error."
 #     fi
 
-# elif user_in == '7':  # Run Custom
-# then
-#     clear
-#     echo "Which to run?"
-#     echo "  (1) MyDediServer2"
-#     echo "  (2) Single_world"
-#     echo "  (3) Reforged"
-#     echo "  (4) Exit"
-#     read chose
-#     if [ $chose == "1" ]
-#     then
-#         cluster_name="MyDediServer2"
-#         set_mod
-#         get_run_shared
-#         "${run_shared[@]}" -shard Caves  | sed 's/^/Caves:  /' &
-#         "${run_shared[@]}" -shard Master | sed 's/^/Master: /'
-#     elif [ $chose == "2" ]
-#     then
-#         set_mod
-#         get_run_shared
-#         "${run_shared[@]}" -shard Master | sed 's/^/Master: /'
-#     elif [ $chose == "3" ]
-#     then
-#         cluster_name="Reforged"
-#         set_mod
-#         get_run_shared
-#         "${run_shared[@]}" -shard Master | sed 's/^/Master: /'
-#     elif [ $chose == "4" ]
-#     then
-#         echo "Exit."
-#     else
-#         echo "Command Error."
-#     fi
-
-
 
 if __name__ == '__main__':
+    path = [
+        CLUSTERS_PATH,
+        CLUSTERS_BACKUP_PATH,
+        PROGRAM_HOME_PATH
+    ]
+    for i in path:
+        if not os.path.exists(i):
+            run_cmd('mkdir -p {}'.format(i))
+
     dst_server = Server()
     dst_server.run()
