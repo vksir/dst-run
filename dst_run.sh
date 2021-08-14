@@ -18,9 +18,9 @@ set_mod()
 }
 get_run_shared()
 {
-    cd "$dst_dir/bin"
+    cd "$dst_dir/bin64"
 
-    run_shared=(./dontstarve_dedicated_server_nullrenderer)
+    run_shared=(./dontstarve_dedicated_server_nullrenderer_x64)
     run_shared+=(-console)
     run_shared+=(-cluster $cluster_name)
     run_shared+=(-monitor_parent_process $$)
