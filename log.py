@@ -1,20 +1,43 @@
 import logging
-from time import strftime, localtime
+
 from dst_run import LOG_FILE
 
 
-def info(s, stdout=False):
-    pass
+logger = logging.getLogger()
 
 
-def warning(s, stdout=False):
-    pass
+def init():
+    global logger
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    fm = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
+
+    sh = logging.StreamHandler()
+    sh.setLevel(logging.DEBUG)
+    sh.setFormatter(fm)
+    logger.addHandler(sh)
+
+    fh = logging.FileHandler(LOG_FILE, mode='a', encoding='utf-8')
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(fm)
+    logger.addHandler(fh)
 
 
-def error(s, stdout=False):
-    pass
+def debug(s):
+    logger.debug(s)
 
 
-def log(s: str):
-    with open(LOG_FILE, 'w+', encoding='utf-8') as f:
-        f.write(strftime('[%Y-%m-%d-%H-%M-%S] {}\n'.format(s), localtime()))
+def info(s):
+    logger.info(s)
+
+
+def warning(s):
+    logger.error(s)
+
+
+def error(s):
+    logger.error(s)
+
+
+def critical(s):
+    logger.critical(s)

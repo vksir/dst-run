@@ -35,8 +35,13 @@ def get_choose(info: dict, expect_no=True) -> int:
 
     print(info['title'])
     if 'blocks' in info:
-        max_len = max(max(len(i['title']) for i in info['blocks']),
-                      max([max([len(j) for j in i['chooses']]) for i in info['blocks']])) + 10
+        max_len = 0
+        for i in info['blocks']:
+            max_len = max(max_len, len(i['title']))
+            for j in i['chooses']:
+                max_len = max(max_len, len(j))
+        max_len += 10
+
         index = 1
         for block in info['blocks']:
             print('{0} {1} {0}'.format('-' * ((max_len - len(block['title']) - 2) // 2),

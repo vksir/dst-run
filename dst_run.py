@@ -44,16 +44,23 @@ class Server:
             else:
                 dst_file = '{}/bin/dontstarve_dedicated_server_nullrenderer'.format(DST_PATH)
             cmd = '{} -console -cluster {}'.format(dst_file, cluster)
+            log.info(f'start dst, cluster={cluster}')
             if self._cfg['enable_caves']:
                 proc = run_cmd('{} -shard Master'.format(cmd),
                                '{} -shard Caves'.format(cmd), cwd='{}/bin64'.format(DST_PATH), block=False)
             else:
                 proc = run_cmd('{} -shard Master'.format(cmd), cwd='{}/bin64'.format(DST_PATH), block=False)
 
-            def tail(p: subprocess.Popen, tag: str):
+            def tail(p, tag):
+                count = 0
                 while p.poll() is None:
-                    print('{}:\t{}'.format(tag, p.stdout.readline()), end='')
-
+                    out = p.stdout.readline()
+                    if not out:
+                        count += 1
+                        if count > 10:
+                            log.error(f'no out for too many times, count={count}')
+                            exit(1)
+                    print(f'{tag}:\t{out}', end='')
             for i in range(len(proc)):
                 threading.Thread(target=tail,
                                  args=(proc[i], 'Master' if i == 0 else 'Caves'),
@@ -61,14 +68,18 @@ class Server:
 
             while True:
                 if [p.poll() for p in proc] != [None] * len(proc):
-                    exit()
+                    log.error('server exits, try to start again')
+                    break
                 if localtime().tm_hour == 3:
+                    log.info('update server')
                     for p in proc:
                         p.send_signal(2)
                     for p in proc:
                         p.wait()
                     self.server_update()
-                sleep(600)
+                    log.info('update server completely, start again')
+                    break
+                sleep(60)
 
     def server_update(self):
         if not self._cfg['enable_dev']:
@@ -82,25 +93,27 @@ class Server:
         if os.path.exists(cluster_path):
             run_cmd('rm -rf {}'.format(cluster_path))
 
-        template_list = os.listdir(TEMPLATE_PATH)
-        template_list.remove('default')
-        template_list.remove('reforged')
-        template_list = ['default', 'reforged'] + template_list
-        user_template_list = os.listdir(USER_TEMPLATE_PATH)
+        template_lst = os.listdir(TEMPLATE_PATH)
+        template_lst.remove('default')
+        template_lst.remove('reforged')
+        template_lst = ['default', 'reforged'] + template_lst
+        user_template_lst = os.listdir(USER_TEMPLATE_PATH)
+
+        log.debug(f'template_lst={template_lst}, user_template_lst={user_template_lst}')
 
         if template:
-            user_in = template_list.index(template)
+            user_in = template_lst.index(template)
         else:
             user_in = get_choose({
                 'title': 'Cluster Template:',
                 'blocks': [
                     {
                         'title': 'Default',
-                        'chooses': template_list
+                        'chooses': template_lst
                     },
                     {
                         'title': 'User',
-                        'chooses': user_template_list
+                        'chooses': user_template_lst
                     }
                 ]
             })
@@ -108,17 +121,17 @@ class Server:
                 user_in = 1
             user_in -= 1
 
-        if user_in < len(template_list):
-            run_cmd('cp -rf {}/{} {}'.format(TEMPLATE_PATH, template_list[user_in], cluster_path))
+        if user_in < len(template_lst):
+            run_cmd('cp -rf {}/{} {}'.format(TEMPLATE_PATH, template_lst[user_in], cluster_path))
         else:
-            run_cmd('cp -rf {}/{} {}'.format(USER_TEMPLATE_PATH, user_template_list[user_in - len(template_list)],
+            run_cmd('cp -rf {}/{} {}'.format(USER_TEMPLATE_PATH, user_template_lst[user_in - len(template_lst)],
                                              cluster_path))
 
     def __backup_cluster(self, cluster=None):
         if not cluster:
             cluster = self._cfg['cluster']
         if os.path.exists('{}/{}'.format(CLUSTERS_PATH, cluster)):
-            file_name = strftime('{}_%Y-%m-%d-%H-%M-%S'.format(cluster), localtime())
+            file_name = strftime('{}_%Y-%m-%d_%H-%M-%S'.format(cluster), localtime())
             run_cmd('tar -czvf {}/{}.tar.gz {}'.format(CLUSTERS_BACKUP_PATH, file_name, cluster), cwd=CLUSTERS_PATH)
 
     def run(self):
@@ -142,7 +155,7 @@ class Server:
                 ]
             })
             if user_in in [-1, 0]:
-                log.info('dst_run exit with code 0', stdout=True)
+                log.info('dst_run exit with code 0')
                 exit()
 
             if user_in in [1, 2]:
@@ -191,13 +204,13 @@ class Server:
                 setting_file = '{}/{}/{}/leveldataoverride.lua'.format(CLUSTERS_PATH, cluster, shard)
 
                 chooses = self._cfg['world_setting']['chooses']
-                setting_list = [k for k in chooses]
+                setting_lst = [k for k in chooses]
                 user_in_2 = get_choose({
                     'title': 'Which to change?',
                     'blocks': [
                         {
                             'title': '{} Setting'.format(shard),
-                            'chooses': setting_list
+                            'chooses': setting_lst
                         },
                         {
                             'title': 'Others',
@@ -205,8 +218,8 @@ class Server:
                         }
                     ]
                 })
-                if user_in_2 in range(1, len(setting_list) + 1):
-                    setting = setting_list[user_in_2 - 1]
+                if user_in_2 in range(1, len(setting_lst) + 1):
+                    setting = setting_lst[user_in_2 - 1]
                     user_in_3 = get_choose({
                         'title': 'Which to choose?',
                         'blocks': [
@@ -248,26 +261,26 @@ class Server:
                     })
                     if user_in_2 == 1:
                         print('Mod List:')
-                        for i, mod_id in enumerate(self._cfg['mod_list']):
-                            print('  ({}) {}'.format(i + 1, mod_id))
+                        for i, mod in enumerate(self._read_modoverrides()):
+                            print('  ({}) {}'.format(i + 1, mod['id']))
                     elif user_in_2 in [2, 3]:
                         if user_in_2 == 2:
                             user_in_3 = input('Input all content in modoverrides file:')
-                            mod_list_1 = self._read_modoverrides(data=user_in_3)
-                            if mod_list_1 == -1:
-                                mod_list_1 = []
+                            mod_lst_1 = self._read_modoverrides(data=user_in_3)
+                            if mod_lst_1 == -1:
+                                mod_lst_1 = []
                                 print('Input format is incorrect.')
                         else:
                             user_in_3 = input('Input mod id:')
-                            mod_list_1 = []
+                            mod_lst_1 = []
                             for mod_id in user_in_3.split():
-                                mod_list_1.append({
+                                mod_lst_1.append({
                                     user_in_3: '["workshop-%s"]={ configuration_options={ }, enabled=true }' % mod_id
                                 })
 
-                        mod_list_2 = self._read_modoverrides()
-                        mod_list_2 = mod_list_2 if mod_list_2 != -1 else []
-                        self._save_modoverrides(mod_list_1 + mod_list_2)
+                        mod_lst_2 = self._read_modoverrides()
+                        mod_lst_2 = mod_lst_2 if mod_lst_2 != -1 else []
+                        self._save_modoverrides(mod_lst_1 + mod_lst_2)
 
                     elif user_in_2 == 4:
                         user_in_3 = get_choose({
@@ -275,7 +288,7 @@ class Server:
                             'blocks': [
                                 {
                                     'title': 'Mod List',
-                                    'chooses': self._cfg['mod_list']
+                                    'chooses': [i for i in self._read_modoverrides()]
                                 },
                                 {
                                     'title': 'Others',
@@ -291,6 +304,9 @@ class Server:
                         editor = 'vim' if user_in_2 == 6 else 'nano'
                         cluster = self._get_cluster()
                         run_cmd('{} {}/{}/Master/modoverrides.lua'.format(editor, CLUSTERS_PATH, cluster))
+
+                    else:
+                        break
 
             elif user_in == 6:
                 self._show_info()
@@ -319,19 +335,23 @@ class Server:
 
                 self._save_cfg(self._cfg)
 
+                cluster = self._get_cluster()
+                if not os.path.exists(f'{CLUSTERS_PATH}/{cluster}'):
+                    print(f'There is no {cluster} World. You should create one now.')
+                    self._create_cluster()
+
     def _show_info(self):
         # run_cmd('clear')
         print(
             '==================== DST_Run ====================\n'
-            'Room Name:\t\t\t\t{2[name_surround]}{2[name]}{2[name_surround]}\n'
+            'Room Name:\t\t\t\t{1[cluster_name][name]}\n'
             'Password:\t\t\t\t{1[cluster_password]}\n'
             'Directly connection:\tc_connect(\"{0[ip]}\", 10999)\n'
             '\n'
             'Cluster Name:\t\t\t{0[cluster]}\n'
             'Server Version:\t\t\t{0[version]}\n'
-            '============= By Villkiss (Ver 1.1.0)=============\n'.format(self._cfg,
-                                                                          self._cfg['room_setting'],
-                                                                          self._cfg['room_setting']['cluster_name'])
+            '============= By Villkiss (Ver 1.1.0)=============\n'.format(
+                self._cfg, self._cfg['room_setting'])
         )
 
     def _init_cfg(self) -> dict:
@@ -409,31 +429,33 @@ class Server:
         cluster = self._get_cluster()
         modoverrides_path = '{}/{}/Master/modoverrides.lua'.format(CLUSTERS_PATH, cluster)
 
-        mod_list = []
+        mod_lst = []
         if not data:
             if not os.path.exists(modoverrides_path):
-                return mod_list
+                return mod_lst
             with open(modoverrides_path, 'r') as f:
                 data = f.read()
         try:
-            id_list = re.findall(r'(?<="workshop-).*?(?=")', data)
-            option_list = re.findall(r'\[.*?enabled.*?\}', data, re.S)
-            for i in range(len(id_list)):
-                mod_list.append({
-                    'id': id_list[i],
-                    'option': option_list[i]
+            id_lst = re.findall(r'(?<="workshop-).*?(?=")', data)
+            option_lst = re.findall(r'\[.*?enabled.*?\}', data, re.S)
+            for i in range(len(id_lst)):
+                mod_lst.append({
+                    'id': id_lst[i],
+                    'option': option_lst[i]
                 })
-            return mod_list
+            return mod_lst
         except Exception as e:
-            log.error('read modoverrides: {}'.format(e), stdout=True)
+            msg = 'read modoverrides: {}'.format(e)
+            print(msg)
+            log.error(msg)
             return -1
 
-    def _save_modoverrides(self, mod_list: List[dict]):
+    def _save_modoverrides(self, mod_lst: List[dict]):
         cluster = self._get_cluster()
         with open('{}/{}/Master/modoverrides.lua'.format(CLUSTERS_PATH, cluster), 'w') as f:
             f.write('return {\n')
-            for i, mod in enumerate(mod_list):
-                f.write('  {},\n'.format(mod) if i + 1 == len(mod_list)
+            for i, mod in enumerate(mod_lst):
+                f.write('  {},\n'.format(mod) if i + 1 == len(mod_lst)
                         else '  {}\n'.format(mod))
             f.write('}\n')
 
@@ -445,8 +467,8 @@ class Server:
         mod_setup_file = '{}/mods/dedicated_server_mods_setup.lua'.format(DST_PATH)
 
         with open(mod_setup_file, 'w') as f:
-            for i in self._cfg['mod_list']:
-                f.write('ServerModSetup("' + i + '")\n')
+            for i in self._read_modoverrides():
+                f.write('ServerModSetup("' + i['id'] + '")\n')
 
         if self._cfg['enable_caves']:
             run_cmd('cp -f %s %s' % (master_modoverrides_file, caves_modoverrides_file))
@@ -460,9 +482,10 @@ class Server:
 
 
 if __name__ == '__main__':
-    path_list = dir()
-    for path in path_list:
-        if path.isupper() and path.endswith('PATH') and not os.path.exists(path):
-            run_cmd('mkdir -p {}'.format(path))
+    path_lst = dir()
+    for path in path_lst:
+        if path.isupper() and path.endswith('PATH') and not os.path.exists(eval(path)):
+            run_cmd('mkdir -p {}'.format(eval(path)))
+    log.init()
     dst_server = Server()
     dst_server.run()
