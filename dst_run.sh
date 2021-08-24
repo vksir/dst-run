@@ -26,7 +26,7 @@ get_run_shared()
     run_shared+=(-monitor_parent_process $$)
 }
 
-echo "What to do? (Ver1.1.0/By Villkiss)"
+echo "What to do? (Ver1.1.1/By Villkiss)"
 echo "--------- Vanilla ---------"
 echo "  (1) Run"
 echo "  (2) Update and Run"
