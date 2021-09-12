@@ -37,7 +37,8 @@ echo "  (5) Install SteamCMD"
 echo "  (6) Install\Update DST_server"
 echo "  (7) Run Cutstom"
 echo "  (8) Run Dev"
-echo "  (9) Exit"
+echo "  (9) Edit Mods File"
+echo "  (10) Exit"
 read chose
 if [ $chose == "1" ]
 then
@@ -151,6 +152,9 @@ then
         echo "Command Error."
     fi
 elif [ $chose == "9" ]     # Exit
+then
+    vim "${cluster_dir}/${cluster_name}/Master/modoverrides.lua"
+elif [ $chose == "10" ]
 then
     echo "Exit."
 else
