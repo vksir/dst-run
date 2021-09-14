@@ -27,7 +27,7 @@ class Controller:
 
     def _start_server(self, update=False):
         if not os.path.exists(f'{CLUSTERS_HOME}/{self._cluster}'):
-            config.create_cluster(self._cluster)
+            config.create_cluster(self._cfg)
         if update:
             self._server.server_update()
         self._server.run()
@@ -44,7 +44,7 @@ class Controller:
         is_backup = get_choice('Backup current cluster?', expect_choice=True)
         if is_backup == CHOICE_YES:
             config.backup_cluster(self._cluster)
-        config.create_cluster(self._cluster)
+        config.create_cluster(self._cfg)
 
     def _room_setting(self):
         # todo
@@ -55,7 +55,7 @@ class Controller:
             print("Reforged world doesn't need to set.")
             return
 
-        shard = get_choice('Which to change?', {
+        shard = get_choice('Which shard to change?', {
             'Shard': {
                 'Master Setting': MASTER,
                 'Caves Setting': CAVES
@@ -64,17 +64,16 @@ class Controller:
         if shard in [CHOICE_DEFAULT, CHOICE_EXIT]:
             return
 
-        setting = get_choice('Which to change?', {
+        setting = get_choice('Which setting to change?', {
             f'{shard} Setting': {i: i for i in self._cfg[shard]}
         })
-        value = get_choice('Which to choose?', {
+        value = get_choice('Which value to choose?', {
             setting: {i: i for i in WORLD_SETTING_DICT[setting]}
         })
         self._cfg[shard][setting] = value
         self._save_params()
 
-        world_setting_path = f'{CLUSTERS_HOME}/{self._cluster}/{shard}/leveldataoverride.lua'
-        # todo 写本地世界设置文件
+        config.save_world_setting(self._cfg)
 
     def _show_mod(self):
         mod_dict = config.read_modoverrides(cluster=self._cluster)

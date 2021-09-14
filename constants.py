@@ -18,7 +18,8 @@ STEAMCMD_HOME = f'{HOME}/steamcmd'
 DST_HOME = f'{HOME}/dst'
 CLUSTERS_HOME = f'{HOME}/.klei/DoNotStarveTogether'
 CLUSTERS_BACKUP_HOME = f'{HOME}/.klei/DoNotStarveTogether/backup'
-
+MASTER_WORLD_SETTING_PATH = f'{HOME}/.klei/DoNotStarveTogether/leveldataoverride.lua'
+CAVES_WORLD_SETTING_PATH = f'{HOME}/.klei/DoNotStarveTogether/leveldataoverride.lua'
 
 # exitcode
 EXIT_SUCCESS = 0
@@ -39,6 +40,8 @@ MASTER = 'Master'
 CAVES = 'Caves'
 DEFAULT = 'default'
 EXIT = 'Exit'
+TRUE = 'true'
+FALSE = 'false'
 
 
 # cfg key
@@ -50,14 +53,20 @@ CLUSTER_TOKEN_KEY = 'cluster_token'
 IP_KEY = 'ip'
 VERSION_KEY = 'version'
 
+ENDLESS_MODE = 'endless'
+GAME_MOD_LIST = [ENDLESS_MODE]
+GAME_MODE_KEY = 'game_mode'
+
+MAX_PLAYERS_KEY = 'max_players'
+PVP_KEY = 'pvp'
 ROOM_NAME_KEY = 'room_name'
 ROOM_PASSWORD_KEY = 'room_password'
+ROOM_DESCRIPTION_KEY = 'root_description'
 TICK_RATE_KEY = 'tick_rate'
 ADMIN_LIST_KEY = 'admin_list'
 
 WORLD_SIZE_KEY = 'world_size'
 SPECIAL_EVENT_KEY = 'special_event'
-
 WORLD_SETTING_DICT = {
     WORLD_SIZE_KEY: ['small', 'medium', 'default', 'huge'],
     SPECIAL_EVENT_KEY: ['default', 'crow_carnival', "hallowed_nights",
