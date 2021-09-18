@@ -9,9 +9,9 @@ return {
       ["SHAREMINIMAPPROGRESS"]=true,
       ["SHOWFIREICONS"]=true,
       ["SHOWPLAYERICONS"]=true,
-      ["SHOWPLAYERSOPTIONS"]=2 
+      ["SHOWPLAYERSOPTIONS"]=2
     },
-    ["enabled"]=true 
+    ["enabled"]=true
   },
 
 -- Show Me
@@ -25,9 +25,9 @@ return {
       ["food_style"]=0,
       ["lang"]="auto",
       ["show_food_units"]=-1,
-      ["show_uses"]=-1 
+      ["show_uses"]=-1
     },
-    ["enabled"]=true 
+    ["enabled"]=true
   },
 
 -- 小木牌
@@ -38,9 +38,9 @@ return {
       Digornot=true,
       DragonflyChest=true,
       Icebox=false,
-      SaltBox=false 
+      SaltBox=false
     },
-    enabled=true 
+    enabled=true
   },
 
 -- 自动堆叠
@@ -67,9 +67,9 @@ return {
       ["ManualStackSeeds"]=false,
       ["PlayerMustHaveOneOfItemToAutoPickup"]=false,
       ["SmokePuffOnStacking"]=true,
-      ["StackDuringPopulation"]=false 
+      ["StackDuringPopulation"]=false
     },
-    ["enabled"]=true 
+    ["enabled"]=true
   },
 
 -- 垃圾桶
@@ -91,28 +91,9 @@ return {
       winter_food=true,
       winter_ornament=true,
       winter_ornament_boss=true,
-      winter_ornament_light=false 
+      winter_ornament_light=false
     },
-    enabled=true 
-  },
-
--- 彩蛋配置
-  ["workshop-2012031749"]={
-    ["configuration_options"]={
-      ["_DEVG_override"]=1,
-      ["_HOUND_override"]=0,
-      ["_LEIF_override"]=1,
-      ["_OASISEXTRA_override"]=0,
-      ["_OASIS_override"]=0,
-      ["_PIGS_override"]=0,
-      ["_POI_override"]=3,
-      ["_PR_override"]=7,
-      ["_REEDS_override"]=1,
-      ["_SPIDER_override"]=0,
-      ["_TALLB_override"]=0,
-      ["_TR_override"]=1 
-    },
-    ["enabled"]=true 
+    enabled=true
   },
 
 -- 镰刀
@@ -120,9 +101,9 @@ return {
     ["configuration_options"]={
       ["difficulty"]="original",
       ["enabledberries"]="allow",
-      ["picking_rate"]="crazy" 
+      ["picking_rate"]="crazy"
     },
-    ["enabled"]=true 
+    ["enabled"]=true
   },
 
 -- tips
@@ -139,8 +120,8 @@ return {
       klaus_sack=true,
       malbatross=false,
       tips_method=1,
-      toadstool=false 
+      toadstool=false
     },
-    enabled=true 
+    enabled=true
   }
-} 
+}
