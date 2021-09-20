@@ -1,16 +1,9 @@
 #!/usr/bin/python3
 
-import os
-import re
-import json
-import subprocess
-import threading
+import readline
 from typing import List
-from time import strftime, localtime, sleep
 
 import log
-import server
-import constants
 import config
 from tools import run_cmd, get_choice, Executor
 from constants import *
@@ -46,9 +39,48 @@ class Controller:
             config.backup_cluster(self._cluster)
         config.create_cluster(self._cfg)
 
+    def _set_cfg_by_input(self, cfg_key: str, title: str, only_digit=False):
+        value = input(title)
+        if only_digit:
+            while not value.isdigit():
+                value = input(f'{title}:(only digit) ')
+        self._cfg.update({cfg_key: value})
+        self._save_params()
+
+    def _set_cfg_by_choice(self, cfg_key: str, title: str, choice_lst: List[str]):
+        value = get_choice('Which to choose?', {
+            title: {i: i for i in choice_lst}
+        })
+        if value in [CHOICE_DEFAULT, CHOICE_EXIT]:
+            return
+
+        self._cfg.update({cfg_key: value})
+        self._save_params()
+
+    def _set_admin_lst(self):
+        config.edit_admin_lst(self._cfg)
+        admin_lst = config.read_admin_lst(self._cfg)
+        self._cfg.update({ADMIN_LIST_KEY: admin_lst})
+        self._save_params()
+
+        config.save_admin_lst(self._cfg)
+
     def _room_setting(self):
-        # todo
-        pass
+        executor = get_choice('Which to change?', {
+            'Room Setting': {
+                'Room Name': Executor(self._set_cfg_by_input, ROOM_NAME_KEY, 'Room Name: '),
+                'Room Password': Executor(self._set_cfg_by_input, ROOM_PASSWORD_KEY, 'Room Password: ', True),
+                'Room Description': Executor(self._set_cfg_by_input, ROOM_DESCRIPTION_KEY, 'Room Description: '),
+                'Game Mode': Executor(self._set_cfg_by_choice, GAME_MODE_KEY, 'Game Mode', GAME_MOD_LIST),
+                'Max Players': Executor(self._set_cfg_by_input, MAX_PLAYERS_KEY, 'Max Players: ', True),
+                'PVP': Executor(self._set_cfg_by_choice, PVP_KEY, 'Enable PVP', TRUE_FALSE_LIST),
+                'Tick Rate': Executor(self._set_cfg_by_input, TICK_RATE_KEY, 'Tick Rate: ', True),
+                'Admin List': Executor(self._set_admin_lst())
+            }
+        })
+        if executor in [CHOICE_DEFAULT, CHOICE_EXIT]:
+            return
+        executor.run()
 
     def _world_setting(self):
         if self._cfg[ENABLE_REFORGED_KEY]:
@@ -67,16 +99,22 @@ class Controller:
         setting = get_choice('Which setting to change?', {
             f'{shard} Setting': {i: i for i in self._cfg[shard]}
         })
+        if setting in [CHOICE_DEFAULT, CHOICE_EXIT]:
+            return
+
         value = get_choice('Which value to choose?', {
             setting: {i: i for i in WORLD_SETTING_DICT[setting]}
         })
+        if value in [CHOICE_DEFAULT, CHOICE_EXIT]:
+            return
+
         self._cfg[shard][setting] = value
         self._save_params()
 
         config.save_world_setting(self._cfg)
 
     def _show_mod(self):
-        mod_dict = config.read_modoverrides(cluster=self._cluster)
+        mod_dict = config.read_modoverrides(self._cfg)
         print('Mod List:')
         for i, mod_id in enumerate(mod_dict.keys()):
             print(f'  ({i + 1}) {mod_id}')
@@ -92,7 +130,7 @@ class Controller:
             while read_ != '}':
                 read = input()
                 content += read
-            mod_dict = config.read_modoverrides(content=content)
+            mod_dict = config.read_modoverrides(self._cfg, content=content)
             if mod_dict == EXIT_FAILED:
                 print('Input format is incorrect.')
                 return
@@ -102,21 +140,17 @@ class Controller:
                 new_mod_dict.update({
                     mod_id: '["workshop-%s"]={ configuration_options={ }, enabled=true }' % mod_id
                 })
-            mod_dict = config.read_modoverrides(self._cluster)
+            mod_dict = config.read_modoverrides(self._cfg)
             mod_dict.update(new_mod_dict)
 
-        config.save_modoverrides(self._cluster, mod_dict)
+        config.save_modoverrides(self._cfg, mod_dict)
 
     def _delete_mod(self):
         mod_id_str = input('Input mod id:')
-        mod_dict = config.read_modoverrides(self._cluster)
+        mod_dict = config.read_modoverrides(self._cfg)
         for mod_id in mod_id_str.split():
             mod_dict.pop(mod_id, None)
-        config.save_modoverrides(self._cluster, mod_dict)
-
-    def _edit_modoverrides_file(self, editor: str):
-        modoverrides_path = f'{CLUSTERS_HOME}/{self._cluster}/Master/modoverrides.lua'
-        run_cmd(f'{editor} {modoverrides_path}')
+        config.save_modoverrides(self._cfg, mod_dict)
 
     def _mod_setting(self):
         while True:
@@ -126,11 +160,8 @@ class Controller:
                 },
                 'Mods Edit': {
                     'Add Mods': Executor(self._add_mod),
-                    'Delete Mods': Executor(self._delete_mod)
-                },
-                'Edit Modoverrides File': {
-                    'By vim': Executor(self._edit_modoverrides_file, editor='vim'),
-                    'By nano': Executor(self._edit_modoverrides_file, editor='nano')
+                    'Delete Mods': Executor(self._delete_mod),
+                    'Edit Modoverrides File': Executor(config.edit_modoverrides)
                 }
             })
             if executor in [CHOICE_DEFAULT, CHOICE_EXIT]:
@@ -157,6 +188,17 @@ class Controller:
                 self._cfg.update({key: key in enable_lst})
         self._save_params()
 
+    def _other_setting(self):
+        executor = get_choice('Which to change?', {
+            'Setting': {
+                'Enable 64-bit': Executor(self._set_cfg_by_choice, ENABLE_64BIT_KEY, 'Enable 64-bit', TRUE_FALSE_LIST),
+                'Editor': Executor(self._set_cfg_by_choice, EDITOR_KEY, 'Editor', EDITOR_LIST)
+            }
+        })
+        if executor in [CHOICE_DEFAULT, CHOICE_EXIT]:
+            return
+        executor.run()
+
     def run(self):
         while True:
             self._show_info()
@@ -172,16 +214,19 @@ class Controller:
                     'Mods Setting': Executor(self._mod_setting)
                 },
                 OTHERS_KEY: {
-                    'Cluster Management': Executor(self._cluster_management)
+                    'Cluster Management': Executor(self._cluster_management),
+                    'Other Setting': Executor(self._other_setting)
                 }
             })
             if executor in [CHOICE_DEFAULT, CHOICE_EXIT]:
                 return
             executor.run()
 
+    def safe_exit(self):
+        self._server.safe_exit()
+
     def _show_info(self):
-        # todo
-        # run_cmd('clear')
+        run_cmd('clear')
         print(
             f'==================== DST_Run ====================\n'
             f'Room Name:\t\t\t\t{self._cfg[ROOM_NAME_KEY]}\n'
@@ -189,7 +234,7 @@ class Controller:
             f'Directly connection:\tc_connect("{self._cfg[IP_KEY]}", 10999)\n'
             f'\n'
             f'Cluster Name:\t\t\t{self._cfg[CLUSTER_KEY]}\n'
-            f'Controller Version:\t\t\t{self._cfg[VERSION_KEY]}\n'
+            f'Version:\t\t\t{self._cfg[VERSION_KEY]}\n'
             f'============= By Villkiss (Ver 1.1.0)=============\n'
         )
 
@@ -201,8 +246,18 @@ class Controller:
         config.save_cfg(self._cfg)
 
 
-if __name__ == '__main__':
-    constants.init()
+def main():
+    config.init_path()
     log.init(stdout=True)
     dst_server = Controller()
-    dst_server.run()
+
+    try:
+        dst_server.run()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        dst_server.safe_exit()
+
+
+if __name__ == '__main__':
+    main()

@@ -1,7 +1,5 @@
 import os
 
-from tools import run_cmd
-
 
 # path
 HOME = os.environ['HOME']
@@ -53,12 +51,17 @@ CLUSTER_TOKEN_KEY = 'cluster_token'
 IP_KEY = 'ip'
 VERSION_KEY = 'version'
 
+EDITOR_KEY = 'editor'
+VIM, NANO = 'vim', 'nano'
+EDITOR_LIST = [VIM, NANO]
+
 ENDLESS_MODE = 'endless'
 GAME_MOD_LIST = [ENDLESS_MODE]
 GAME_MODE_KEY = 'game_mode'
+PVP_KEY = 'pvp'
+TRUE_FALSE_LIST = ['true', 'false']
 
 MAX_PLAYERS_KEY = 'max_players'
-PVP_KEY = 'pvp'
 ROOM_NAME_KEY = 'room_name'
 ROOM_PASSWORD_KEY = 'room_password'
 ROOM_DESCRIPTION_KEY = 'root_description'
@@ -78,11 +81,3 @@ WORLD_SETTING_DICT = {
 # choice key
 OTHERS_KEY = 'Others'
 EXIT_KEY = 'Exit'
-
-
-def init():
-    path_lst = dir()
-    for path in path_lst:
-        if (path.endswith('PATH') or path.endswith('HOME')) \
-                and not os.path.exists(eval(path)):
-            run_cmd(f'mkdir -p {eval(path)}')

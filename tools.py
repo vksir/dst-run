@@ -5,22 +5,18 @@ from typing import List
 from constants import *
 
 
-def run_cmd(*cmd: str, cwd=None, sudo=False, block=True) -> List[subprocess.Popen]:
-    proc = []
-    for i in cmd:
-        if sudo:
-            i += 'sudo '
-        if block:
-            p = subprocess.Popen(shlex.split(i), cwd=cwd)
-            p.wait()
-        else:
-            p = subprocess.Popen(shlex.split(i), cwd=cwd, encoding='utf-8',
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT,
-                                 stdin=None)
-            proc.append(p)
-    if proc:
-        return proc
+def run_cmd(cmd: str, cwd=None, sudo=False, block=True) -> subprocess.Popen:
+    if sudo:
+        cmd += 'sudo '
+    if block:
+        p = subprocess.Popen(shlex.split(cmd), cwd=cwd)
+        p.wait()
+    else:
+        p = subprocess.Popen(shlex.split(cmd), cwd=cwd, encoding='utf-8',
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             stdin=subprocess.PIPE)
+    return p
 
 
 def _get_option_value(title: str, block_dict: dict = None) -> str:

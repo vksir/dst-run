@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from configparser import ConfigParser, SectionProxy
 
 import log
+import constants
 from constants import *
 from tools import run_cmd, get_choice
 
@@ -24,13 +25,14 @@ def _init_cfg() -> dict:
         CLUSTER_TOKEN_KEY: cluster_token,
         IP_KEY: ip,
         VERSION_KEY: version,
+        EDITOR_KEY: VIM,
 
-        GAME_MODE_KEY: ENDLESS_MODE,
-        MAX_PLAYERS_KEY: '6',
-        PVP_KEY: FALSE,
         ROOM_NAME_KEY: 'DST Run',
         ROOM_PASSWORD_KEY: '6666',
         ROOM_DESCRIPTION_KEY: '',
+        GAME_MODE_KEY: ENDLESS_MODE,
+        MAX_PLAYERS_KEY: '6',
+        PVP_KEY: FALSE,
         TICK_RATE_KEY: '15',
         ADMIN_LIST_KEY: [],
 
@@ -61,7 +63,7 @@ def save_cfg(cfg: dict):
         json.dump(cfg, f)
 
 
-def read_modoverrides(content=None, cluster=None):
+def read_modoverrides(cfg: dict, content=None):
     """get mod_dict
 
     from modoverrides.lua content
@@ -71,15 +73,14 @@ def read_modoverrides(content=None, cluster=None):
 
     if content:
         data = content
-    elif cluster:
+    else:
+        cluster = get_cluster(cfg)
         modoverrides_path = f'{CLUSTERS_HOME}/{cluster}/Master/modoverrides.lua'
         if not os.path.exists(modoverrides_path):
             log.info(f"path doesn't exit: {modoverrides_path}")
             return {}
         with open(modoverrides_path, 'r') as f:
             data = f.read()
-    else:
-        raise Exception('read_modoverrides() need modoverrides_content or cluster, but none of them got')
 
     mod_dict = {}
     try:
@@ -93,8 +94,10 @@ def read_modoverrides(content=None, cluster=None):
         return EXIT_FAILED
 
 
-def save_modoverrides(cluster: str, mod_dict: dict):
-    with open(f'{CLUSTERS_HOME}/{cluster}/Master/modoverrides.lua', 'w') as f:
+def save_modoverrides(cfg: dict, mod_dict: dict):
+    cluster = get_cluster(cfg)
+    modoverrides_path = _get_modoverrides_path(cluster)
+    with open(modoverrides_path, 'w') as f:
         f.write('return {\n')
         mod_lst = list(mod_dict.values())
         if mod_lst:
@@ -103,7 +106,12 @@ def save_modoverrides(cluster: str, mod_dict: dict):
         f.write('}\n')
 
 
-def set_mod_setup(cfg: dict):
+def edit_modoverrides(cfg: dict):
+    cluster = get_cluster(cfg)
+    _edit_file(cfg.get(EDITOR_KEY), path=_get_modoverrides_path(cluster))
+
+
+def save_mod_setup(cfg: dict):
     cluster = get_cluster(cfg)
 
     master_modoverrides_path = f'{CLUSTERS_HOME}/{cluster}/Master/modoverrides.lua'
@@ -111,7 +119,7 @@ def set_mod_setup(cfg: dict):
     mod_setup_path = f'{DST_HOME}/mods/dedicated_server_mods_setup.lua'
 
     with open(mod_setup_path, 'w') as f:
-        mod_dict = read_modoverrides(cluster=cluster)
+        mod_dict = read_modoverrides(cfg)
         for mod_id in mod_dict:
             f.write(f'ServerModSetup("{mod_id}")\n')
 
@@ -143,10 +151,15 @@ def create_cluster(cfg: dict):
     if template in [CHOICE_EXIT, CHOICE_DEFAULT]:
         template = DEFAULT
 
-    run_cmd(f'cp -rf {USER_TEMPLATE_HOME}/{template} {cluster_path}')
+    if template in template_lst:
+        cmd = f'cp -rf {TEMPLATE_HOME}/{template} {cluster_path}'
+    else:
+        cmd = f'cp -rf {USER_TEMPLATE_HOME}/{template} {cluster_path}'
+    run_cmd(cmd)
 
     save_room_setting(cfg)
     save_world_setting(cfg)
+
 
 def backup_cluster(cluster: str):
     if os.path.exists(f'{CLUSTERS_HOME}/{cluster}'):
@@ -195,10 +208,36 @@ def save_room_setting(cfg: dict):
         cluster_parser.write(f)
 
 
-def set_token(cfg: dict):
+def save_token(cfg: dict):
     cluster = get_cluster(cfg)
     with open(f'{CLUSTERS_HOME}/{cluster}/cluster_token.txt', 'w') as f:
         f.write(cfg[CLUSTER_TOKEN_KEY])
+
+
+def read_admin_lst(cfg: dict) -> List[str]:
+    cluster = get_cluster(cfg)
+    admin_list_path = _get_admin_lst_path(cluster)
+    if not os.path.exists(admin_list_path):
+        return []
+
+    admin_lst = []
+    with open(admin_list_path, 'r') as f:
+        for admin in f:
+            admin_lst.append(admin)
+    return admin_lst
+
+
+def save_admin_lst(cfg: dict):
+    cluster = get_cluster(cfg)
+    admin_lst_path = _get_admin_lst_path(cluster)
+    with open(admin_lst_path, 'w') as f:
+        for admin in cfg.get(ADMIN_LIST_KEY):
+            f.write(f'{admin}\n')
+
+
+def edit_admin_lst(cfg: dict):
+    cluster = get_cluster(cfg)
+    _edit_file(cfg.get(EDITOR_KEY), path=_get_admin_lst_path(cluster))
 
 
 def get_version() -> str:
@@ -216,5 +255,37 @@ def get_ip():
     return ''
 
 
+def _edit_file(editor: str, path: str):
+    run_cmd(f'{editor} {path}')
+
+
 def get_cluster(cfg: dict) -> str:
     return REFORGED if cfg[ENABLE_REFORGED_KEY] else cfg[CLUSTER_KEY]
+
+
+def get_cluster_path(cluster: str) -> str:
+    return f'{CLUSTERS_HOME}/{cluster}'
+
+
+def _get_modoverrides_path(cluster: str, shard=MASTER) -> str:
+    return f'{CLUSTERS_HOME}/{cluster}/{shard}/modoverrides.lua'
+
+
+def _get_world_setting_path(cluster: str, shard=MASTER) -> str:
+    return f'{CLUSTERS_HOME}/{cluster}/{shard}/leveldataoverride.lua'
+
+
+def _get_cluster_ini_path(cluster: str) -> str:
+    return f'{CLUSTERS_HOME}/{cluster}/cluster.ini'
+
+
+def _get_admin_lst_path(cluster: str) -> str:
+    return f'{CLUSTERS_HOME}/{cluster}/adminlist.txt'
+
+
+def init_path():
+    path_lst = dir(constants)
+    for path in path_lst:
+        if (path.endswith('PATH') or path.endswith('HOME')) \
+                and not os.path.exists(eval(path)):
+            run_cmd(f'mkdir -p {eval(path)}')
