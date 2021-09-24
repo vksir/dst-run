@@ -15,6 +15,10 @@ INTERVAL = 60
 class Server:
     def __init__(self):
         self._lock = threading.Lock()
+        self._proc_lst: List[Popen] = []
+
+    def __del__(self):
+        self._safe_exit()
 
     def run(self):
         while True:
@@ -29,12 +33,12 @@ class Server:
         while True:
             for proc in proc_lst:
                 if proc.poll() is not None:
-                    self.safe_exit(proc_lst)
+                    self._safe_exit()
                     log.error('server exit, start again after 30s')
                     return
             if time.localtime().tm_hour == 3:
                 log.info('begin update server')
-                self.safe_exit(proc_lst)
+                self._safe_exit()
                 self.server_update()
                 log.info('update server completely')
                 time.sleep(60 * 60)
@@ -71,11 +75,10 @@ class Server:
                              args=(proc, 'Master' if i == 0 else 'Caves'),
                              daemon=True).start()
 
-    @staticmethod
-    def safe_exit(proc_lst: List[Popen]):
-        for p in proc_lst:
+    def _safe_exit(self):
+        for p in self._proc_lst:
             p.send_signal(2)
-        for p in proc_lst:
+        for p in self._proc_lst:
             p.wait()
 
     @staticmethod

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import readline
+import signal
 from typing import List
 
 import log
@@ -222,9 +222,6 @@ class Controller:
                 return
             executor.run()
 
-    def safe_exit(self):
-        self._server.safe_exit()
-
     def _show_info(self):
         run_cmd('clear')
         print(
@@ -247,16 +244,14 @@ class Controller:
 
 
 def main():
+    def safe_exit(*args):
+        exit()
+    signal.signal(signal.SIGINT, safe_exit)
+
     config.init_path()
     log.init(stdout=True)
     dst_server = Controller()
-
-    try:
-        dst_server.run()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        dst_server.safe_exit()
+    dst_server.run()
 
 
 if __name__ == '__main__':
