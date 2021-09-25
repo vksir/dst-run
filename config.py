@@ -1,13 +1,14 @@
+import io
 import json
 import re
 import time
-from typing import List
+from typing import List, IO
 from copy import deepcopy
-from contextlib import contextmanager
+from contextlib import contextmanager, ContextDecorator
 from configparser import ConfigParser, SectionProxy
 
-import log
 import constants
+from log import log
 from constants import *
 from tools import run_cmd, get_choice
 
@@ -15,7 +16,6 @@ from tools import run_cmd, get_choice
 def _init_cfg() -> dict:
     cluster_token = input('No cluster_token found.\n'
                           'Please input your cluster_token: ')
-    ip = get_ip()
     version = get_version()
     cfg = {
         CLUSTER_KEY: 'Cluster_1',
@@ -23,9 +23,9 @@ def _init_cfg() -> dict:
         ENABLE_CAVES_KEY: True,
         ENABLE_64BIT_KEY: True,
         CLUSTER_TOKEN_KEY: cluster_token,
-        IP_KEY: ip,
         VERSION_KEY: version,
         EDITOR_KEY: VIM,
+        TEMPLATE_KEY: DEFAULT,
 
         ROOM_NAME_KEY: 'DST Run',
         ROOM_PASSWORD_KEY: '6666',
@@ -133,39 +133,16 @@ def create_cluster(cfg: dict):
     if os.path.exists(cluster_path):
         run_cmd(f'rm -rf {cluster_path}')
 
-    if cluster == REFORGED:
-        template_path = f'{TEMPLATE_HOME}/{REFORGED}'
-        run_cmd(f'cp -rf {template_path} {cluster_path}')
-        return
-
-    template_lst = os.listdir(TEMPLATE_HOME)
-    template_lst.remove(DEFAULT)
-    template_lst.insert(0, DEFAULT)
-    user_template_lst = os.listdir(USER_TEMPLATE_HOME)
-    log.debug(f'template_lst={template_lst}, user_template_lst={user_template_lst}')
-
-    template = get_choice('Cluster Template:', {
-        'Default': {i: i for i in template_lst},
-        'User': {i: i for i in user_template_lst}
-    })
-    if template in [CHOICE_EXIT, CHOICE_DEFAULT]:
-        template = DEFAULT
-
-    if template in template_lst:
-        cmd = f'cp -rf {TEMPLATE_HOME}/{template} {cluster_path}'
-    else:
-        cmd = f'cp -rf {USER_TEMPLATE_HOME}/{template} {cluster_path}'
-    run_cmd(cmd)
-
-    save_room_setting(cfg)
-    save_world_setting(cfg)
+    template = cfg.get(TEMPLATE_KEY)
+    template_path = f'{TEMPLATE_HOME}/{template}'
+    run_cmd(f'cp -rf {template_path} {cluster_path}')
+    return
 
 
-def backup_cluster(cluster: str):
-    if os.path.exists(f'{CLUSTERS_HOME}/{cluster}'):
-        name = input('Input backup filename: (Empty to use default name) ')
-        file_name = time.strftime(f'{name if name else cluster}_%Y-%m-%d_%H-%M-%S', time.localtime())
-        run_cmd(f'tar -czvf {CLUSTERS_BACKUP_HOME}/{file_name}.tar.gz {cluster}', cwd=CLUSTERS_HOME)
+def backup_cluster(cfg: dict):
+    cluster = get_cluster(cfg)
+    file_name = time.strftime(f'{cluster}_%Y-%m-%d_%H-%M-%S', time.localtime())
+    run_cmd(f'tar -czvf {CLUSTERS_BACKUP_HOME}/{file_name}.tar.gz {cluster}', cwd=CLUSTERS_HOME)
 
 
 def save_world_setting(cfg: dict):
@@ -286,6 +263,34 @@ def _get_admin_lst_path(cluster: str) -> str:
 def init_path():
     path_lst = dir(constants)
     for path in path_lst:
-        if (path.endswith('PATH') or path.endswith('HOME')) \
-                and not os.path.exists(eval(path)):
+        if path.endswith('HOME') and not os.path.exists(eval(path)):
             run_cmd(f'mkdir -p {eval(path)}')
+
+
+class ServerLogWriter:
+    def __init__(self):
+        self._fd = None
+
+    def init_fd(self) -> IO:
+        self._fd = open(GAME_LOG_PATH, 'w')
+        return self._fd
+
+    def close_fd(self):
+        if self._fd:
+            self._fd.close()
+
+    def get_fd(self) -> IO:
+        return self._fd
+
+
+class ServerLogReader(ContextDecorator):
+    def __enter__(self):
+        self._fd = open(GAME_LOG_PATH, 'rb')
+        self._fd.seek(0, io.SEEK_END)
+        return self
+
+    def __exit__(self, *args):
+        self._fd.close()
+
+    def read(self):
+        return self._fd.read().decode(errors='replace').replace('?', '')

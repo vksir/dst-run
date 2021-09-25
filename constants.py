@@ -1,7 +1,6 @@
 import os
 
 
-# path
 HOME = os.environ['HOME']
 
 PROGRAM_HOME = f'{HOME}/dst_run'
@@ -11,6 +10,9 @@ PROGRAM_DATA_HOME = f'{HOME}/.dst_run'
 CFG_PATH = f'{HOME}/.dst_run/config.json'
 LOG_PATH = f'{HOME}/.dst_run/dst_run.log'
 USER_TEMPLATE_HOME = f'{HOME}/.dst_run/cluster_template'
+GAME_LOG_HOME = f'{HOME}/.dst_run/log'
+GAME_LOG_PATH = f'{HOME}/.dst_run/log/log.txt'
+GAME_LOG_BACKUP_HOME = f'{HOME}/.dst_run/log/backup'
 
 STEAMCMD_HOME = f'{HOME}/steamcmd'
 DST_HOME = f'{HOME}/dst'
@@ -50,6 +52,7 @@ ENABLE_64BIT_KEY = 'enable_64-bit'
 CLUSTER_TOKEN_KEY = 'cluster_token'
 IP_KEY = 'ip'
 VERSION_KEY = 'version'
+TEMPLATE_KEY = 'template'
 
 EDITOR_KEY = 'editor'
 VIM, NANO = 'vim', 'nano'
@@ -81,3 +84,7 @@ WORLD_SETTING_DICT = {
 # choice key
 OTHERS_KEY = 'Others'
 EXIT_KEY = 'Exit'
+
+
+WHITE_LST = ['127.0.0.1']
+

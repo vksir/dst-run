@@ -2,21 +2,28 @@ import shlex
 import subprocess
 from typing import List
 
+from log import log
 from constants import *
 
 
-def run_cmd(cmd: str, cwd=None, sudo=False, block=True) -> subprocess.Popen:
+def run_cmd(cmd: str, cwd=None, sudo=False, block=True, shell=False,
+            stdout=subprocess.PIPE) -> (int, subprocess.Popen):
     if sudo:
         cmd += 'sudo '
+    if not shell:
+        cmd = shlex.split(cmd)
+
+    p = subprocess.Popen(cmd, cwd=cwd, shell=shell,
+                         encoding='utf-8', bufsize=1,
+                         stdout=stdout,
+                         stderr=subprocess.STDOUT,
+                         stdin=subprocess.PIPE)
+    ret = 0
     if block:
-        p = subprocess.Popen(shlex.split(cmd), cwd=cwd)
-        p.wait()
-    else:
-        p = subprocess.Popen(shlex.split(cmd), cwd=cwd, encoding='utf-8',
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT,
-                             stdin=subprocess.PIPE)
-    return p
+        ret, out = p.communicate()
+        if ret:
+            log.error(f'rum cmd failed: cmd={cmd}, out={out}')
+    return ret, p
 
 
 def _get_option_value(title: str, block_dict: dict = None) -> str:
