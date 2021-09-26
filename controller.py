@@ -142,7 +142,7 @@ class Controller:
         if is_running:
             self.do_start()
         log.info('mod_add success')
-        return response(0, mod_list=mod_lst)
+        return response(0, mod_list=list(mod_dict.keys()))
 
     def do_mod_del(self, mod_lst: list = None) -> dict:
         log.info('begin mod_del')
@@ -159,7 +159,7 @@ class Controller:
         if is_running:
             self.do_start()
         log.info('mod_del success')
-        return response(0, mod_list=mod_lst)
+        return response(0, mod_list=list(mod_dict.keys()))
 
     def do_player_list(self, timeout=5) -> dict:
         """block"""
