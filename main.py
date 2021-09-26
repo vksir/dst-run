@@ -3,6 +3,7 @@
 
 import signal
 
+import log
 import config
 from http_server import Application, HttpServer
 
@@ -13,6 +14,7 @@ def main():
     signal.signal(signal.SIGINT, safe_exit)
 
     config.init_path()
+    log.init_log()
     http_server = HttpServer(Application())
     http_server.start()
 

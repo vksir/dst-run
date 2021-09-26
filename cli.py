@@ -61,12 +61,12 @@ def remote_run(method: str, args: list = None, kwargs: dict = None, ip='127.0.0.
 def main():
     args = parser.parse_args()
     if args.action:
-        action = 'do_' + args.action
+        action = ('do_' + args.action).replace('-', '_')
         # todo
         return
 
     if args.method:
-        method = args.method
+        method = args.method.replace('-', '_')
         res = remote_run(method)
         pprint(res, sort_dicts=False)
 

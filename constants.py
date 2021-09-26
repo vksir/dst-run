@@ -85,6 +85,5 @@ WORLD_SETTING_DICT = {
 OTHERS_KEY = 'Others'
 EXIT_KEY = 'Exit'
 
-
-WHITE_LST = ['127.0.0.1']
+WHITE_LIST_KEY = 'white_list'
 

@@ -13,54 +13,57 @@ from constants import *
 from tools import run_cmd, get_choice
 
 
-def _init_cfg() -> dict:
-    cluster_token = input('No cluster_token found.\n'
-                          'Please input your cluster_token: ')
-    version = get_version()
-    cfg = {
-        CLUSTER_KEY: 'Cluster_1',
-        ENABLE_REFORGED_KEY: False,
-        ENABLE_CAVES_KEY: True,
-        ENABLE_64BIT_KEY: True,
-        CLUSTER_TOKEN_KEY: cluster_token,
-        VERSION_KEY: version,
-        EDITOR_KEY: VIM,
-        TEMPLATE_KEY: DEFAULT,
+class CfgParser:
+    def __init__(self):
+        if not os.path.exists(CFG_PATH):
+            self._init_cfg()
 
-        ROOM_NAME_KEY: 'DST Run',
-        ROOM_PASSWORD_KEY: '6666',
-        ROOM_DESCRIPTION_KEY: '',
-        GAME_MODE_KEY: ENDLESS_MODE,
-        MAX_PLAYERS_KEY: '6',
-        PVP_KEY: FALSE,
-        TICK_RATE_KEY: '15',
-        ADMIN_LIST_KEY: [],
-
-        MASTER: {
-            WORLD_SIZE_KEY: DEFAULT,
-            SPECIAL_EVENT_KEY: DEFAULT
-        },
-        CAVES: {
-            WORLD_SIZE_KEY: DEFAULT,
-            SPECIAL_EVENT_KEY: DEFAULT
-        }
-    }
-    save_cfg(cfg)
-    return cfg
-
-
-def read_cfg() -> dict:
-    try:
+    @staticmethod
+    def read() -> dict:
         with open(CFG_PATH, 'r') as f:
             return json.load(f)
-    except Exception as e:
-        log.error(f'read cfg: {e}')
-        return _init_cfg()
 
+    @staticmethod
+    def write(cfg: dict):
+        with open(CFG_PATH, 'w') as f:
+            json.dump(cfg, f, indent=4)
 
-def save_cfg(cfg: dict):
-    with open(CFG_PATH, 'w') as f:
-        json.dump(cfg, f)
+    def _init_cfg(self):
+        version = get_version()
+        cfg = {
+            CLUSTER_KEY: 'Cluster_1',
+            ENABLE_REFORGED_KEY: False,
+            ENABLE_CAVES_KEY: True,
+            ENABLE_64BIT_KEY: True,
+            CLUSTER_TOKEN_KEY: '',
+            VERSION_KEY: version,
+            EDITOR_KEY: VIM,
+            TEMPLATE_KEY: DEFAULT,
+            WHITE_LIST_KEY: ['127.0.0.1'],
+
+            ROOM_NAME_KEY: 'DST Run',
+            ROOM_PASSWORD_KEY: '6666',
+            ROOM_DESCRIPTION_KEY: '',
+            GAME_MODE_KEY: ENDLESS_MODE,
+            MAX_PLAYERS_KEY: '6',
+            PVP_KEY: FALSE,
+            TICK_RATE_KEY: '30',
+            ADMIN_LIST_KEY: [],
+
+            MASTER: {
+                WORLD_SIZE_KEY: DEFAULT,
+                SPECIAL_EVENT_KEY: DEFAULT
+            },
+            CAVES: {
+                WORLD_SIZE_KEY: DEFAULT,
+                SPECIAL_EVENT_KEY: DEFAULT
+            }
+        }
+        self.write(cfg)
+        print(f'Please edit the configuration file.\n'
+              f'You could run this command:\n'
+              f'  vim {CFG_PATH}')
+        exit()
 
 
 def read_modoverrides(cfg: dict, content=None):
@@ -293,4 +296,5 @@ class ServerLogReader(ContextDecorator):
         self._fd.close()
 
     def read(self):
-        return self._fd.read().decode(errors='replace').replace('?', '')
+        # todo
+        return self._fd.read().decode(errors='replace').encode(errors='replace').decode(errors='replace').replace('?', '')

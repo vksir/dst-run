@@ -3,10 +3,7 @@ import logging
 from constants import LOG_PATH
 
 
-__all__ = ['log']
-
-
-def init(level=logging.INFO):
+def init_log(level=logging.INFO):
     global log
     log = logging.getLogger()
     log.setLevel(level)
@@ -19,4 +16,3 @@ def init(level=logging.INFO):
 
 
 log = logging.getLogger()
-init(logging.INFO)
