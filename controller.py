@@ -132,9 +132,11 @@ class Controller:
             mod_dict = config.read_modoverrides(cfg)
             mod_dict.update(new_mod_dict)
         elif mod_overrides is not None:
-            mod_dict = config.read_modoverrides(cfg, content=mod_overrides)
-            if mod_dict == EXIT_FAILED:
+            mod_dict = config.read_modoverrides(cfg)
+            new_mod_dict = config.read_modoverrides(cfg, content=mod_overrides)
+            if new_mod_dict == EXIT_FAILED:
                 return response(1, info='invalid input')
+            mod_dict.update(new_mod_dict)
         else:
             return response(1, info='no params get')
         config.save_modoverrides(cfg, mod_dict)
