@@ -88,7 +88,7 @@ def read_modoverrides(cfg: dict, content=None):
     mod_dict = {}
     try:
         id_lst = re.findall(r'(?<="workshop-).*?(?=")', data)
-        option_lst = re.findall(r'\[.*?enabled.*?}', data, re.S)
+        option_lst = re.findall(r'\[.*?].*?=.*?\{.*?\{.*?}.*?enabled.*?}', data, re.S)
         for i in range(len(id_lst)):
             mod_dict.update({id_lst[i]: option_lst[i]})
         return mod_dict
