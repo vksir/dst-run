@@ -88,7 +88,7 @@ def read_modoverrides(cfg: dict, content=None):
     mod_dict = {}
     try:
         id_lst = re.findall(r'(?<="workshop-).*?(?=")', data)
-        option_lst = re.findall(r'\[.*?enabled.*?\}', data, re.S)
+        option_lst = re.findall(r'\[.*?enabled.*?}', data, re.S)
         for i in range(len(id_lst)):
             mod_dict.update({id_lst[i]: option_lst[i]})
         return mod_dict
@@ -105,7 +105,7 @@ def save_modoverrides(cfg: dict, mod_dict: dict):
         mod_lst = list(mod_dict.values())
         if mod_lst:
             for mod in mod_lst:
-                f.write(f'  {mod}{"," if mod is mod_lst[-1] else ""}\n')
+                f.write(f'  {mod}{"" if mod is mod_lst[-1] else ","}\n')
         f.write('}\n')
 
 
