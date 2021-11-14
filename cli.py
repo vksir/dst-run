@@ -3,7 +3,9 @@
 
 import argparse
 import json
-from pprint import pprint
+from importlib import import_module
+from inspect import signature
+from typing import List
 
 import requests
 from log import log
@@ -12,15 +14,78 @@ from constants import *
 from http_server import Controller
 
 
-parser = argparse.ArgumentParser(description='dst-run cli')
-parser.add_argument('-a', '--action', dest='action', type=str,
-                    help='dst-run action')
-parser.add_argument('-c', '--control', dest='method', type=str,
-                    help='dst-server control')
-parser.add_argument('-args', dest='args', type=str, metavar='arg1,arg2',
-                    help='function args')
-parser.add_argument('-kwargs', dest='kwargs', type=str, metavar='key1=value1,key2=value2',
-                    help='function kwargs')
+class ArgParserHandler:
+    def __init__(self):
+        self._enable_debug = False
+
+    def run(self):
+        parser = self.get_parser()
+        args = parser.parse_args()
+
+        kwargs = dict(args.__dict__)
+        method = kwargs.pop('method')
+        res = self._control(method, kwargs)
+
+        new_res = {key: value for key, value in res.items() if value is not None}
+        print(json.dumps(new_res, indent=4))
+
+    def _control(self, method: str, kwargs: dict = None) -> dict:
+        url = f'http://{IP}:{PORT}'
+        data = {
+            'method': method.replace('-', '_'),
+            'kwargs': kwargs or {}
+        }
+
+        try:
+            resp = requests.post(url, data=json.dumps(data))
+        except requests.ConnectionError as e:
+            log.error(f'post failed: error={e}')
+            return self._response(1, info='connect refused')
+
+        try:
+            resp_data = json.loads(resp.text)
+            log.info(f'control success: resp_data={resp_data}')
+            return resp_data
+        except json.JSONDecodeError as e:
+            log.error(f'json decode failed: resp_text={resp.text}, error={e}')
+            return self._response(1, info=resp.text)
+
+    @staticmethod
+    def get_parser() -> argparse.ArgumentParser:
+        def find_parser(objs: List[object]):
+            for obj in objs:
+                for method_name, method in obj.__dict__.items():
+                    if not method_name.startswith('do_'):
+                        continue
+                    method_name = method_name[3:].replace('_', '-')
+
+                    sub_parser = sub_parsers.add_parser(method_name)
+                    sub_parser.set_defaults(method=method_name)
+                    parameters = signature(method).parameters
+                    for arg_name, arg_parameter in parameters.items():
+                        if arg_name == 'self':
+                            continue
+                        arg_name = arg_name.replace('_', '-')
+                        if arg_parameter.default is arg_parameter.empty:
+                            sub_parser.add_argument(f'--{arg_name}', required=True)
+                        else:
+                            sub_parser.add_argument(f'--{arg_name}', required=False, default=arg_parameter.default)
+
+        parser = argparse.ArgumentParser(description='dst-run cli')
+        sub_parsers = parser.add_subparsers(title='methods')
+        find_parser([import_module('cli'), Controller])
+        return parser
+
+    @staticmethod
+    def _response(ret: int,
+                  info: str = None,
+                  player_list: list = None,
+                  mod_list: list = None) -> dict:
+        return locals()
+
+    def _print(self, *args, **kwargs):
+        if self._enable_debug:
+            print(*args, **kwargs)
 
 
 def do_install():
@@ -38,38 +103,6 @@ def do_set_log_level(level):
     pass
 
 
-def remote_run(method: str, args: list = None, kwargs: dict = None, ip='127.0.0.1', port=5800):
-    url = f'http://{ip}:{port}'
-    data = {'method': method}
-    if args:
-        data['args'] = args
-    if kwargs:
-        data['kwargs'] = kwargs
-
-    try:
-        res = requests.post(url, data=json.dumps(data))
-    except requests.ConnectionError:
-        return 'connect refused'
-
-    try:
-        recv_data = json.loads(res.text)
-    except json.JSONDecodeError:
-        recv_data = res.text
-    return recv_data
-
-
-def main():
-    args = parser.parse_args()
-    if args.action:
-        action = ('do_' + args.action).replace('-', '_')
-        # todo
-        return
-
-    if args.method:
-        method = args.method.replace('-', '_')
-        res = remote_run(method)
-        pprint(res, sort_dicts=False)
-
-
 if __name__ == '__main__':
-    main()
+    ap = ArgParserHandler()
+    ap.run()

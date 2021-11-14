@@ -1,5 +1,4 @@
 import json
-from typing import List
 from traceback import format_exc
 from wsgiref.simple_server import make_server
 
@@ -7,9 +6,9 @@ from webob import Request, Response
 
 import config
 from log import log
-from tools import run_cmd, get_choice, Executor
+from tools import run_cmd
 from constants import *
-from controller import Controller, response
+from controller import Controller
 
 
 class Application:
@@ -34,10 +33,10 @@ class Application:
 
         try:
             data = json.loads(body.decode())
-        except Exception as e:
+        except Exception:
             info = 'json loads body failed'
             log.error(f'{info}: body={body}, remote_addr={remote_addr}, error={format_exc()}')
-            resp.body = json.dumps(response(1, info=info)).encode()
+            resp.body = json.dumps(self._response(1, info=info)).encode()
             return resp(env, start_response)
 
         resp_data = self._deal_with_data(remote_addr, data)
@@ -51,26 +50,33 @@ class Application:
         if not method:
             info = 'get method failed'
             log.error(f'{info}: data={data}, remote_addr={remote_addr}')
-            return response(1, info=info)
+            return self._response(1, info=info)
 
         method = 'do_' + method
         if not hasattr(self._controller, method):
             info = 'method not found'
             log.error(f'{info}: method={method}, data={data}, remote_addr={remote_addr}')
-            return response(1, info=info)
+            return self._response(1, info=info)
 
         kwargs = data.get('kwargs', {})
         try:
             res = getattr(self._controller, method)(**kwargs)
             return res
-        except Exception as e:
+        except Exception:
             info = 'run method failed'
             log.error(f'{info}: method={method}, data={data}, remote_addr={remote_addr}, error={format_exc()}')
-            return response(1, info=info)
+            return self._response(1, info=info)
+
+    @staticmethod
+    def _response(ret: int,
+                  info: str = None,
+                  player_list: list = None,
+                  mod_list: list = None) -> dict:
+        return locals()
 
 
 class HttpServer:
-    def __init__(self, app, port=5800):
+    def __init__(self, app, port=PORT):
         self._app = app
         self._port = port
 

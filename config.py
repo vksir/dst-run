@@ -86,15 +86,14 @@ def read_modoverrides(cfg: dict, content=None):
             data = f.read()
 
     mod_dict = {}
-    try:
-        id_lst = re.findall(r'(?<="workshop-).*?(?=")', data)
-        option_lst = re.findall(r'\[.*?].*?=.*?\{.*?\{.*?}.*?enabled.*?}', data, re.S)
-        for i in range(len(id_lst)):
-            mod_dict.update({id_lst[i]: option_lst[i]})
-        return mod_dict
-    except Exception as e:
-        log.error(f'regular modoverrides failed: data={data}, error={e}')
+    id_lst = re.findall(r'(?<="workshop-).*?(?=")', data)
+    option_lst = re.findall(r'\[.*?].*?=.*?\{.*?\{.*?}.*?enabled.*?}', data, re.S)
+    if len(id_lst) != len(option_lst):
+        log.error(f'regular modoverrides failed: data={data}, id_lst={id_lst}, option_lst={option_lst}')
         return EXIT_FAILED
+    for i in range(len(id_lst)):
+        mod_dict.update({id_lst[i]: option_lst[i]})
+    return mod_dict
 
 
 def save_modoverrides(cfg: dict, mod_dict: dict):
@@ -297,4 +296,4 @@ class ServerLogReader(ContextDecorator):
 
     def read(self):
         # todo
-        return self._fd.read().decode(errors='replace').encode(errors='replace').decode(errors='replace').replace('?', '')
+        return self._fd.read().decode()

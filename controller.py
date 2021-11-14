@@ -1,9 +1,6 @@
 import io
 import re
 import time
-import threading
-from functools import wraps
-from threading import Thread
 from typing import List, IO
 from subprocess import Popen
 
@@ -13,15 +10,7 @@ from config import ServerLogWriter, ServerLogReader
 from constants import *
 from tools import run_cmd
 
-
 INTERVAL = 60
-
-
-def response(ret: int,
-             info: str = None,
-             player_list: list = None,
-             mod_list: list = None) -> dict:
-    return locals()
 
 
 class Controller:
@@ -39,18 +28,18 @@ class Controller:
         if self._proc_lst:
             info = 'dst server is running, do nothing'
             log.info(info)
-            return response(1, info=info)
+            return self._response(1, info=info)
         cfg = self._cfg_parser.read()
         self._init_cfg(cfg)
         self._proc_lst = self._run(cfg)
-        return response(0)
+        return self._response(0)
 
     def do_stop(self, timeout=30) -> dict:
         """block"""
 
         if not self._proc_lst:
             log.info('dst server has stopped, do nothing')
-            return response(0)
+            return self._response(0)
 
         for p in self._proc_lst:
             p.send_signal(2)
@@ -72,18 +61,18 @@ class Controller:
 
         self._proc_lst = []
         log.info('stop dst server success')
-        return response(0)
+        return self._response(0)
 
     def do_restart(self) -> dict:
         log.info('begin restart')
         self.do_stop()
         self.do_start()
         log.info('restart success')
-        return response(0)
+        return self._response(0)
 
     def do_update(self) -> dict:
         log.info('being update')
-        is_running = bool(self._proc_lst)
+        is_running = self._is_running
         if is_running:
             self.do_stop()
 
@@ -92,22 +81,19 @@ class Controller:
         if is_running:
             self.do_start()
         log.info('update success')
-        return response(0)
+        return self._response(0)
 
     def do_create_cluster(self) -> dict:
         log.info('being create_cluster')
-        is_running = bool(self._proc_lst)
-        if is_running:
+        if self._is_running:
             self.do_stop()
 
         cfg = self._cfg_parser.read()
         config.backup_cluster(cfg)
         config.create_cluster(cfg)
 
-        if is_running:
-            self.do_start()
         log.info('create_cluster success')
-        return response(0)
+        return self._response(0)
 
     def do_mod_list(self) -> dict:
         log.info('begin mod_list')
@@ -115,11 +101,11 @@ class Controller:
         mod_dict = config.read_modoverrides(cfg)
         mod_lst = list(mod_dict.keys())
         log.info(f'mod_list success: mod_list={mod_lst}')
-        return response(0, mod_list=mod_lst)
+        return self._response(0, mod_list=mod_lst)
 
     def do_mod_add(self, mod_lst: list = None, mod_overrides: str = None) -> dict:
         log.info('begin mod_add')
-        is_running = bool(self._proc_lst)
+        is_running = self._is_running
         if is_running:
             self.do_stop()
 
@@ -135,20 +121,20 @@ class Controller:
             mod_dict = config.read_modoverrides(cfg)
             new_mod_dict = config.read_modoverrides(cfg, content=mod_overrides)
             if new_mod_dict == EXIT_FAILED:
-                return response(1, info='invalid input')
+                return self._response(1, info='invalid input')
             mod_dict.update(new_mod_dict)
         else:
-            return response(1, info='no params get')
+            return self._response(1, info='no params get')
         config.save_modoverrides(cfg, mod_dict)
 
         if is_running:
             self.do_start()
         log.info('mod_add success')
-        return response(0, mod_list=list(mod_dict.keys()))
+        return self._response(0, mod_list=list(mod_dict.keys()))
 
     def do_mod_del(self, mod_lst: list = None) -> dict:
         log.info('begin mod_del')
-        is_running = bool(self._proc_lst)
+        is_running = self._is_running
         if is_running:
             self.do_stop()
 
@@ -161,12 +147,12 @@ class Controller:
         if is_running:
             self.do_start()
         log.info('mod_del success')
-        return response(0, mod_list=list(mod_dict.keys()))
+        return self._response(0, mod_list=list(mod_dict.keys()))
 
     def do_player_list(self, timeout=5) -> dict:
         """block"""
-        if not self._proc_lst:
-            return response(1, info='server is not running')
+        if not self._is_running:
+            return self._response(1, info='server is not running')
 
         log.info('begin get player_list')
         with ServerLogReader() as log_reader:
@@ -184,22 +170,38 @@ class Controller:
                 if cost_time > timeout:
                     info = 'get player list timeout'
                     log.error(f'{info}: out={out}')
-                    return response(1, info=info)
+                    return self._response(1, info=info)
 
                 time.sleep(0.5)
                 out += log_reader.read()
             msg = pattern.search(out).group()
-            # todo 隐去 id
             player_lst = re.findall(r'\[[0-9]+?].+(?=\t)', msg)
+            for i, player in enumerate(player_lst):
+                player = re.sub(r'\s*\(.+?\)\s*', ' ', player)
+                player = re.sub(r'\s*<.+?>\s*', '', player)
+                player_lst[i] = player
             log.info(f'get play_list success: play_list={player_lst}')
-            return response(0, player_list=player_lst)
+            return self._response(0, player_list=player_lst)
 
     def do_say(self, msg: str) -> dict:
         """block"""
+        if not self._is_running:
+            return self._response(1, info='server is not running')
+
         log.info(f'say: {msg}')
         master = self._proc_lst[0]
         master.stdin.write(f'c_announce("{msg}")\n')
-        return response(0)
+        return self._response(0)
+
+    def do_run_cmd(self, msg: str):
+        """noblock"""
+        if not self._is_running:
+            return self._response(1, info='server is not running')
+
+        log.info(f'run_cmd: {msg}')
+        master = self._proc_lst[0]
+        master.stdin.write(f'{msg}\n')
+        return self._response(0)
 
     def _run(self, cfg) -> List[Popen]:
         cluster = config.get_cluster(cfg)
@@ -219,6 +221,19 @@ class Controller:
             _, caves = run_cmd(f'{cmd} -shard Caves', cwd=cwd_path, block=False, stdout=fd)
             proc_lst.append(caves)
         return proc_lst
+
+    def _response(self,
+                  ret: int,
+                  info: str = None,
+                  player_list: list = None,
+                  mod_list: list = None) -> dict:
+        if info is None:
+            info = 'server is running' if self._is_running else 'server has stopped'
+        return locals()
+
+    @property
+    def _is_running(self):
+        return bool(self._proc_lst)
 
     @staticmethod
     def server_update(stdout=None):
