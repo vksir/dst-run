@@ -2,7 +2,7 @@
 
 steamcmd_dir="$HOME/steamcmd"
 dst_dir="$HOME/dst"
-cluster_name="MyDediServer"
+cluster_name="Cluster_1"
 cluster_dir="$HOME/.klei/DoNotStarveTogether"
 
 set_mod()
