@@ -227,9 +227,12 @@ class Controller:
                   info: str = None,
                   player_list: list = None,
                   mod_list: list = None) -> dict:
+
         if info is None:
             info = 'server is running' if self._is_running else 'server has stopped'
-        return locals()
+        data = locals()
+        data.pop('self', None)
+        return data
 
     @property
     def _is_running(self):
