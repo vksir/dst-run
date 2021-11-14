@@ -8,7 +8,6 @@ from inspect import signature
 from typing import List
 
 import requests
-from log import log
 from tools import run_cmd
 from constants import *
 from http_server import Controller
@@ -38,17 +37,18 @@ class ArgParserHandler:
 
         try:
             resp = requests.post(url, data=json.dumps(data))
+            if resp.status_code != 200:
+                return self._response(1, info=f'http error: '
+                                              f'status_code={resp.status_code}, resp_text={resp.text}')
         except requests.ConnectionError as e:
-            log.error(f'post failed: error={e}')
-            return self._response(1, info='connect refused')
+            return self._response(1, info=f'post failed: error={e}')
 
         try:
             resp_data = json.loads(resp.text)
-            log.info(f'control success: resp_data={resp_data}')
             return resp_data
         except json.JSONDecodeError as e:
-            log.error(f'json decode failed: resp_text={resp.text}, error={e}')
-            return self._response(1, info=resp.text)
+            return self._response(1, info=f'json decode failed: '
+                                          f'resp_text={resp.text}, error={e}')
 
     @staticmethod
     def get_parser() -> argparse.ArgumentParser:

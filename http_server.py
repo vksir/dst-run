@@ -29,6 +29,8 @@ class Application:
         body = req.body
         if remote_addr not in self._white_lst:
             resp.status_code = 401
+            log.info(f'remote_addr not in white_lst: '
+                     f'remote_addr={remote_addr}, white_lst={self._white_lst}')
             return resp(env, start_response)
 
         try:
