@@ -1,23 +1,11 @@
-#!/usr/bin/python3
-# coding: utf-8
-
-import signal
-
-import log
-import config
-from http_server import Application, HttpServer
-
-
-def main():
-    def safe_exit(*args):
-        exit()
-    signal.signal(signal.SIGINT, safe_exit)
-
-    config.init_path()
-    log.init_log()
-    http_server = HttpServer(Application())
-    http_server.start()
+import uvicorn
+import platform
 
 
 if __name__ == '__main__':
-    main()
+    host = '0.0.0.0' if platform.system() == 'Linux' else '127.0.0.1'
+    uvicorn.run('dst_run:app',
+                host=host,
+                port=5800,
+                reload=True)
+

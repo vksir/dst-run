@@ -4,8 +4,8 @@ from wsgiref.simple_server import make_server
 
 from webob import Request, Response
 
-import config
-from log import log
+from dst_run.routes import config
+from dst_run.common.log import log
 from tools import run_cmd
 from constants import *
 from controller import Controller

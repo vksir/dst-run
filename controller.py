@@ -1,12 +1,11 @@
-import io
 import re
 import time
-from typing import List, IO
+from typing import List
 from subprocess import Popen
 
-import config
-from log import log
-from config import ServerLogWriter, ServerLogReader
+from dst_run.routes import config
+from dst_run.common.log import log
+from dst_run.routes.config import ServerLogWriter, ServerLogReader
 from constants import *
 from tools import run_cmd
 
@@ -22,66 +21,6 @@ class Controller:
     def __del__(self):
         self.do_stop()
         self._log_writer.close_fd()
-
-    def do_start(self) -> dict:
-        """noblock"""
-        if self._proc_lst:
-            info = 'dst server is running, do nothing'
-            log.info(info)
-            return self._response(1, info=info)
-        cfg = self._cfg_parser.read()
-        self._init_cfg(cfg)
-        self._proc_lst = self._run(cfg)
-        return self._response(0)
-
-    def do_stop(self, timeout=30) -> dict:
-        """block"""
-
-        if not self._proc_lst:
-            log.info('dst server has stopped, do nothing')
-            return self._response(0)
-
-        for p in self._proc_lst:
-            p.send_signal(2)
-
-        start_time = time.time()
-        is_run = True
-        while is_run:
-            cost_time = time.time() - start_time
-            if cost_time > timeout:
-                log.error('stop dst server timeout')
-                for p in self._proc_lst:
-                    p.kill()
-
-            time.sleep(0.5)
-            is_run = False
-            for p in self._proc_lst:
-                if p.poll() is None:
-                    is_run = True
-
-        self._proc_lst = []
-        log.info('stop dst server success')
-        return self._response(0)
-
-    def do_restart(self) -> dict:
-        log.info('begin restart')
-        self.do_stop()
-        self.do_start()
-        log.info('restart success')
-        return self._response(0)
-
-    def do_update(self) -> dict:
-        log.info('being update')
-        is_running = self._is_running
-        if is_running:
-            self.do_stop()
-
-        self.server_update(self._log_writer.get_fd())
-
-        if is_running:
-            self.do_start()
-        log.info('update success')
-        return self._response(0)
 
     def do_create_cluster(self) -> dict:
         log.info('being create_cluster')
