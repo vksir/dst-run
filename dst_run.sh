@@ -81,6 +81,10 @@ then
     fi
 elif [ $chose == "4" ]      # Install dependencies
 then
+    add-apt-repository multiverse
+    dpkg --add-architecture i386
+    apt update
+    apt install lib32gcc1 steamcmd
     apt install libstdc++6:i386 libgcc1:i386 libcurl4-gnutls-dev:i386 -y
 elif [ $chose == "5" ]      # Install SteamCMD
 then
