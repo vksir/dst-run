@@ -63,7 +63,7 @@ class PrefabSwapsStart(str, Enum):
     highly_random = 'highly random'
 
 
-class WorldCfg(BaseModel):
+class BaseWorld(BaseModel):
     # 世界选项-全局
     specialevent: SpecialEvent = Field(None, title='活动')
 
@@ -83,7 +83,7 @@ class WorldCfg(BaseModel):
     prefabswaps_start: PrefabSwapsStart = Field(None, title='开始资源多样化')
 
 
-class Master(WorldCfg):
+class Master(BaseWorld):
     # 世界选项-世界
     hunt: Frequency = Field(None, title='狩猎')
     wildfires: Frequency = Field(None, title='野火')
@@ -115,7 +115,7 @@ class Master(WorldCfg):
     walrus: Rarity = Field(None, title='海象营地')
 
 
-class Caves(WorldCfg):
+class Caves(BaseWorld):
     # 世界选项-世界
     earthquakes: Frequency = Field(None, title='地震')
     atriumgate: Frequency = Field(None, title='远古大门')

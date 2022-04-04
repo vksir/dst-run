@@ -1,6 +1,6 @@
 import os
 import subprocess
-from dst_run import log
+from dst_run.common.log import log
 from dst_run.common import constants
 
 

@@ -2,7 +2,7 @@ import os
 import logging
 
 from dst_run.common import constants
-from dst_run.common.constants import LOG_PATH
+from dst_run.common.constants import FilePath
 
 
 log = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ def init_path():
 def init_log():
     sh = logging.StreamHandler()
     sh.setFormatter(formatter)
-    fh = logging.FileHandler(LOG_PATH, 'w', encoding='utf-8')
+    fh = logging.FileHandler(FilePath.LOG_PATH, 'w', encoding='utf-8')
     fh.setFormatter(formatter)
     log.addHandler(sh)
     log.addHandler(fh)
