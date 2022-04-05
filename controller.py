@@ -3,9 +3,9 @@ import time
 from typing import List
 from subprocess import Popen
 
-from dst_run.routes import config
+from dst_run.app.routes import config
 from dst_run.common.log import log
-from dst_run.routes.config import ServerLogWriter, ServerLogReader
+from dst_run.app.routes import ServerLogWriter, ServerLogReader
 from constants import *
 from tools import run_cmd
 

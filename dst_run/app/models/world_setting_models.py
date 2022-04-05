@@ -1,5 +1,4 @@
 from enum import Enum
-
 from pydantic import BaseModel, Field
 
 
@@ -44,6 +43,11 @@ class SpecialEvent(str, Enum):
     year_of_the_beefalo = 'year_of_the_beefalo'
 
 
+class SpecialEventEnable(str, Enum):
+    default = 'default'
+    enabled = 'enabled'
+
+
 class TaskSet(str, Enum):
     classic = 'classic'
     default = 'default'
@@ -64,8 +68,18 @@ class PrefabSwapsStart(str, Enum):
 
 
 class BaseWorld(BaseModel):
-    # 世界选项-全局
+    # 世界选项-活动
     specialevent: SpecialEvent = Field(None, title='活动')
+
+    crow_carnival: SpecialEventEnable = Field(None, title='盛夏鸦年华')
+    hallowed_nights: SpecialEventEnable = Field(None, title='万圣夜')
+    winters_feast: SpecialEventEnable = Field(None, title='冬季盛宴')
+    year_of_the_varg: SpecialEventEnable = Field(None, title='火鸡之年')
+    year_of_the_gobbler: SpecialEventEnable = Field(None, title='座狼之年')
+    year_of_the_pig: SpecialEventEnable = Field(None, title='猪王之年')
+    year_of_the_carrat: SpecialEventEnable = Field(None, title='胡萝卜鼠之年')
+    year_of_the_beefalo: SpecialEventEnable = Field(None, title='皮弗娄牛之年')
+    year_of_the_catcoon: SpecialEventEnable = Field(None, title='浣猫之年')
 
     # 世界选项-世界
     weather: Frequency = Field(None, title='雨')

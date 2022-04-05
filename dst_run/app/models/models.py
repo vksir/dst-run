@@ -32,10 +32,6 @@ class Room(BaseModel):
     NETWORK: Network = None
 
 
-class Data(BaseModel):
-    data: str
-
-
 class Ret(Enum):
     SUCCEED = 0
     FAILED = 1

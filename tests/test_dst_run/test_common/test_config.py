@@ -2,10 +2,9 @@ import builtins
 from io import StringIO
 from unittest import TestCase
 from unittest.mock import patch
-from unittest.mock import MagicMock
-from dst_run.routes.config import BaseCfg
-from dst_run.routes.config import RoomCfgHandler
-from dst_run.routes.config import WorldCfgHandler
+from dst_run.app.routes import BaseCfg
+from dst_run.app.routes import RoomCfgHandler
+from dst_run.app.routes import WorldCfgHandler
 
 
 class TestRoomCfgHandler(TestCase):

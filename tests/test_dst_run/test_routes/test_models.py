@@ -1,5 +1,4 @@
 import unittest
-from dst_run.routes.models import *
 
 
 class TestFilter(unittest.TestCase):

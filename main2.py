@@ -4,7 +4,7 @@
 import signal
 
 from dst_run.common import log
-from dst_run.routes import config
+from dst_run.app.routes import config
 from http_server import Application, HttpServer
 
 

@@ -4,7 +4,7 @@ from wsgiref.simple_server import make_server
 
 from webob import Request, Response
 
-from dst_run.routes import config
+from dst_run.app.routes import config
 from dst_run.common.log import log
 from tools import run_cmd
 from constants import *
