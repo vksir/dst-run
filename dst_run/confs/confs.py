@@ -41,6 +41,8 @@ class Confs(BaseConf):
         self.world.load()
         self.mod.load()
 
+        self.save()
+
     def _get_init_data(self):
         return {}
 

@@ -1,7 +1,5 @@
-import os
 import subprocess
 from dst_run.common.log import log
-from dst_run.common import constants
 
 
 def run_cmd(cmd: str, cwd=None, sudo=False):

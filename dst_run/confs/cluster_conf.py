@@ -98,7 +98,7 @@ class ClusterConf(BaseConf):
             return
         if name is None:
             name = time.strftime(f'%Y-%m-%d_%H-%M-%S', time.localtime())
-        run_cmd(f'tar -czvf {FilePath.CLUSTERS_BACKUP_DIR}/{name}.tar.gz {FilePath.CLUSTER_NAME}',
+        run_cmd(f'tar -czf {FilePath.CLUSTERS_BACKUP_DIR}/{name}.tar.gz {FilePath.CLUSTER_NAME}',
                 cwd=FilePath.CLUSTERS_DIR)
 
     def delete_backup_cluster(self, name: str):

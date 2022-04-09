@@ -11,9 +11,10 @@ async def create_cluster_by_template(name: str):
             and name not in CONF.cluster.backup_clusters:
         return Response(ret=Ret.FAILED, detail='template not exists')
     TASK_QUEUE.produce(CONF.cluster.create_cluster_by_template, name, force=True)
+    TASK_QUEUE.produce(CONF.load)
     return Response()
 
 
 @app.post('/cluster/backup_cluster/{name}', tags=['cluster'], response_model=Response, summary='从备份存档创建存档')
-async def create_cluster_by_template(name: str):
+async def create_cluster_by_backup_cluster(name: str):
     pass

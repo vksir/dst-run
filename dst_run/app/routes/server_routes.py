@@ -25,11 +25,7 @@ async def player_list():
     ret, out = send_command('c_listallplayers()', send_all=True)
     if ret:
         return Response(ret=Ret.FAILED, detail=out)
-    players = re.findall(r'\[[0-9]+?].+(?=\t)', out)
-    for i, player in enumerate(players):
-        player = re.sub(r'\s*\(.+?\)\s*', ' ', player)
-        player = re.sub(r'\s*<.+?>\s*', '', player)
-        players[i] = player
+    players = re.findall(r'\[\d+?\] \(.*?\) (.+)\\t', out)
     return Response(players=players)
 
 

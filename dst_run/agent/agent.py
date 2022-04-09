@@ -76,7 +76,18 @@ class Agent:
             is_running = self._is_running
 
             def deal_stdout(out: str):
-                if 'Join Announcement' in out:
+                special_msg = [
+                    '[Join Announcement]',
+                    '[Leave Announcement]',
+                    '[Death Announcement]',
+                    '[Resurrect Announcement]',
+                    '[Say]',
+                    '[Announcement]',
+                    'Starting master server',
+                    'Shutting down',
+                    'Sim paused'
+                ]
+                if any(msg in out for msg in special_msg):
                     MSG_QUEUE.produce(out)
 
             while is_running():

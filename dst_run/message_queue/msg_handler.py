@@ -3,6 +3,7 @@ import threading
 from typing import Union
 from dst_run.common.log import log
 from dst_run.message_queue.base_queue import BaseQueue
+from dst_run.reporter.reporter import REPORTER
 
 __all__ = ['MSG_QUEUE']
 
@@ -28,7 +29,7 @@ class MsgHandler(threading.Thread):
         while True:
             msg = MSG_QUEUE.consume()
             if msg is not None:
-                log.info(f'recv msg={msg.msg}')
+                REPORTER.deal_with_msg(msg)
                 continue
             time.sleep(1)
 

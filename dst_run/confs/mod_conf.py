@@ -16,7 +16,7 @@ class ModConf(BaseConf):
             if not mod_enable:
                 continue
             mod_setting += f'  {mod_config},\n'
-        mod_setting = mod_setting[-2] + '}\n'
+        mod_setting = mod_setting[:-2] + '}\n'
         with open(FilePath.MASTER_MOD_SETTING_PATH, 'w', encoding='utf-8') as f:
             f.write(mod_setting)
         with open(FilePath.CAVES_MOD_SETTING_PATH, 'w', encoding='utf-8') as f:
@@ -31,7 +31,7 @@ class ModConf(BaseConf):
     def load(self):
         with open(FilePath.MASTER_MOD_SETTING_PATH, 'r', encoding='utf-8') as f:
             content = f.read()
-        for _, mod in self:
+        for mod in self.values():
             mod['enable'] = False
         self.add_by_content(content)
 
