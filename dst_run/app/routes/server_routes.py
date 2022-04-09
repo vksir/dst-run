@@ -36,6 +36,20 @@ async def announce(msg: str):
     return Response(ret=ret, detail=out)
 
 
+@app.post('/server/regenerate_world', tags=['server'], response_model=Response, summary='重新生成世界')
+@lock
+async def regenerate_world(msg: str):
+    ret, out = send_command('c_regenerateworld()')
+    return Response(ret=ret, detail=out)
+
+
+@app.post('/server/rollback/{days}', tags=['server'], response_model=Response, summary='回档')
+@lock
+async def regenerate_world(days: int):
+    ret, out = send_command(f'c_rollback({days})')
+    return Response(ret=ret, detail=out)
+
+
 @app.post('/server/{cmd}', tags=['server'], response_model=Response, summary='执行命令')
 @lock
 async def run_cmd(cmd: str):

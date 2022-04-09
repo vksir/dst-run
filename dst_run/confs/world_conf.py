@@ -5,8 +5,8 @@ from dst_run.confs.base_conf import BaseConf
 
 class WorldConf(BaseConf):
     def deploy(self):
-        self._deploy(self['master'], FilePath.MASTER_WORLD_SETTING_PATH)
-        self._deploy(self['caves'], FilePath.CAVES_WORLD_SETTING_PATH)
+        self._deploy(self.master, FilePath.MASTER_WORLD_SETTING_PATH)
+        self._deploy(self.caves, FilePath.CAVES_WORLD_SETTING_PATH)
 
     def load(self):
         data = self._load(FilePath.MASTER_WORLD_SETTING_PATH)
@@ -14,7 +14,8 @@ class WorldConf(BaseConf):
         data = self._load(FilePath.CAVES_WORLD_SETTING_PATH)
         self['caves'] = data
 
-    def _get_init_data(self):
+    @property
+    def _default(self) -> dict:
         return {
             'master': {},
             'caves': {}

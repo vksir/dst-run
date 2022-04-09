@@ -7,6 +7,7 @@ class Action(Enum):
     STOP = 'STOP'
     RESTART = 'RESTART'
     UPDATE = 'UPDATE'
+    REGENERATE = 'REGENERATE'
 
 
 class GameMode(Enum):
@@ -38,8 +39,8 @@ class Ret(Enum):
 
 
 class Mod(BaseModel):
-    id: str
-    config: str
+    id: str = None
+    config: str = None
     name: str = None
     remark: str = None
     version: str = None

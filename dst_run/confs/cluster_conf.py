@@ -3,6 +3,7 @@ import time
 from typing import List
 from dst_run.common.constants import FilePath
 from dst_run.common.constants import Constants
+from dst_run.common.file_lib import FileLib
 from dst_run.common.utils import run_cmd
 from dst_run.common.log import log
 from dst_run.confs.base_conf import BaseConf
@@ -17,21 +18,29 @@ class ClusterConf(BaseConf):
     def load(self):
         self.create_cluster_by_template(force=False)
 
-    def _get_init_data(self):
-        token = input('Please input your token: ')
+    @property
+    def _default(self) -> dict:
         return {
-            'token': token,
+            'token': '',
             'admins': []
         }
 
     def _deploy_admins(self):
-        admin_data = '\n'.join(self['admins'])
+        admin_data = '\n'.join(self.admins)
         with open(FilePath.ADMINS_PATH, 'w', encoding='utf-8') as f:
             f.write(admin_data)
 
     def _deploy_token(self):
         with open(FilePath.CLUSTER_TOKEN_PATH, 'w', encoding='utf-8') as f:
-            f.write(self['token'])
+            f.write(self.token)
+
+    @property
+    def admins(self):
+        return self['admins']
+
+    @property
+    def token(self):
+        return self['token']
 
     # cluster
     def create_cluster_by_template(self, template='default', force=True) -> int:
@@ -47,12 +56,17 @@ class ClusterConf(BaseConf):
             return Constants.RET_FAILED
 
         self.create_backup_cluster()
-        run_cmd(f'rm -rf {FilePath.CLUSTER_PATH}')
-        run_cmd(f'cp -rf {template_path} {FilePath.CLUSTER_PATH}')
+        FileLib.remove(FilePath.CLUSTER_PATH)
+        FileLib.copy(template_path, FilePath.CLUSTER_PATH)
         return Constants.RET_SUCCEED
 
     def create_cluster_by_backup_cluster(self, backup_cluster: str):
         pass
+
+    @staticmethod
+    def clean_cluster_save():
+        FileLib.remove(FilePath.MASTER_MOD_SAVE_DIR)
+        FileLib.remove(FilePath.CAVES_MOD_SAVE_DIR)
 
     # template
     @property
@@ -75,7 +89,7 @@ class ClusterConf(BaseConf):
         new_path = self._get_custom_template_path(new_name)
         if not os.path.exists(old_path):
             return
-        run_cmd(f'mv -f {old_path} {new_path}')
+        FileLib.move(old_path, new_path)
 
     @staticmethod
     def _get_default_template_path(template: str):
@@ -110,7 +124,7 @@ class ClusterConf(BaseConf):
         new_path = self._get_backup_cluster_path(new_name)
         if not os.path.exists(old_path):
             return
-        run_cmd(f'mv -f {old_path} {new_path}')
+        FileLib.move(old_path, new_path)
 
     @staticmethod
     def _get_backup_cluster_path(backup_cluster: str):

@@ -16,14 +16,15 @@ __all__ = ['CONF']
 
 class Confs(BaseConf):
     def __init__(self):
-        super().__init__({})
-        self.read()
+        data = self._read()
+        data = data or {}
+        super().__init__(data)
 
-        self.common = CommonConf(self.get('common', None))
-        self.cluster = ClusterConf(self.get('cluster', None))
-        self.room = RoomConf(self.get('room', None))
-        self.world = WorldConf(self.get('world', None))
-        self.mod = ModConf(self.get('mod', None))
+        self.common = CommonConf(self['common'])
+        self.cluster = ClusterConf(self['cluster'])
+        self.room = RoomConf(self['room'])
+        self.world = WorldConf(self['world'])
+        self.mod = ModConf(self['mod'])
 
         self.save()
 
@@ -40,11 +41,17 @@ class Confs(BaseConf):
         self.room.load()
         self.world.load()
         self.mod.load()
-
         self.save()
 
-    def _get_init_data(self):
-        return {}
+    @property
+    def _default(self) -> dict:
+        return {
+            'common': {},
+            'cluster': {},
+            'room': {},
+            'world': {},
+            'mod': {}
+        }
 
     @staticmethod
     def _read() -> Union[None, dict]:
@@ -66,7 +73,7 @@ class Confs(BaseConf):
     @staticmethod
     def _save(data: dict) -> None:
         with open(FilePath.CFG_PATH, 'w', encoding='utf-8') as f:
-            yaml.dump(data, f, sort_keys=False)
+            yaml.dump(data, f)
 
     def save(self):
         self['common'] = dict(self.common)

@@ -5,6 +5,8 @@ from dst_run.confs.base_conf import BaseConf
 
 
 class RoomConf(BaseConf):
+    EYE_ICON = '󰀅'
+
     def deploy(self):
         room_setting = ConfigParser()
         with open(FilePath.ROOM_SETTING_PATH, 'r', encoding='utf-8') as f:
@@ -13,6 +15,8 @@ class RoomConf(BaseConf):
             for key, value in section.items():
                 if isinstance(value, int):
                     value = str(value)
+                if key == 'cluster_name':
+                    value = self.EYE_ICON + value + self.EYE_ICON
                 room_setting[section_key][key] = value
         with open(FilePath.ROOM_SETTING_PATH, 'w', encoding='utf-8') as f:
             room_setting.write(f)
@@ -20,7 +24,8 @@ class RoomConf(BaseConf):
     def load(self):
         pass
 
-    def _get_init_data(self):
+    @property
+    def _default(self) -> dict:
         return {
             'GAMEPLAY': {
                 'game_mode': 'endless',

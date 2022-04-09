@@ -25,7 +25,7 @@ class Agent:
     STATUS_UPDATE = 'UPDATING'
 
     def __init__(self):
-        self.status = self.STATUS_INACTIVE
+        self._is_update = False
         self._running_processes: List[Popen] = []
 
         self._lock = threading.Lock()
@@ -42,7 +42,55 @@ class Agent:
         except Exception as e:
             log.error(f'del agent failed: e={e}')
 
-    def _is_running(self) -> bool:
+    @property
+    def status(self):
+        if self._is_update:
+            return self.STATUS_UPDATE
+        return self.STATUS_ACTIVE if self._is_active else self.STATUS_INACTIVE
+
+    def start(self) -> None:
+        if self.status != self.STATUS_INACTIVE:
+            return
+        CONF.deploy()
+        self._init_stdout()
+        self._run()
+        self._run_stdout_reader()
+
+    def stop(self) -> None:
+        if self.status != self.STATUS_ACTIVE:
+            return
+        self._stop()
+
+    def restart(self) -> None:
+        self.stop()
+        self.start()
+
+    def update(self) -> None:
+        self._is_update = True
+        is_active = self._is_active
+        self.stop()
+
+        self._init_stdout()
+        self._update()
+        if is_active:
+            self.start()
+        self._is_update = False
+
+    def regenerate(self):
+        is_active = self._is_active
+        self.stop()
+
+        CONF.cluster.clean_cluster_save()
+        if is_active:
+            self.start()
+
+    def run_cmd(self, cmd: str, send_all=False) -> (int, str):
+        if self.status != self.STATUS_ACTIVE:
+            return Constants.RET_FAILED, f'server is {self.status.lower()}, do nothing'
+        return self._run_cmd(cmd, send_all)
+
+    @property
+    def _is_active(self) -> bool:
         if not self._running_processes:
             return False
         if any(p.poll() is None for p in self._running_processes):
@@ -73,7 +121,10 @@ class Agent:
             lock = self._lock
             readline = self._master_stdout_read.readline
             sleep = functools.partial(time.sleep, period)
-            is_running = self._is_running
+            processes_polls = [p.poll for p in self._running_processes]
+
+            def is_active():
+                return any(poll() is None for poll in processes_polls)
 
             def deal_stdout(out: str):
                 special_msg = [
@@ -88,9 +139,11 @@ class Agent:
                     'Sim paused'
                 ]
                 if any(msg in out for msg in special_msg):
+                    if out.endswith('\n'):
+                        out = out[:-1]
                     MSG_QUEUE.produce(out)
 
-            while is_running():
+            while is_active():
                 with lock:
                     line = readline()
                 if line:
@@ -101,18 +154,11 @@ class Agent:
 
         threading.Thread(target=stdout_reader).start()
 
-    def run(self) -> None:
-        if self.status != self.STATUS_UPDATE:
-            self.status = self.STATUS_ACTIVE
-        self._init_stdout()
-        self._run()
-        self._run_stdout_reader()
-
     def _stop(self, timeout=30) -> None:
         for p in self._running_processes:
             p.send_signal(2)
         start_time = time.time()
-        while self._is_running():
+        while self._is_active:
             cost_time = time.time() - start_time
             if cost_time > timeout:
                 log.error('stop dst_server failed for timeout')
@@ -123,11 +169,6 @@ class Agent:
                     p.kill()
             time.sleep(0.5)
 
-    def stop(self) -> None:
-        if self.status != self.STATUS_UPDATE:
-            self.status = self.STATUS_INACTIVE
-        self._stop()
-
     def _update(self) -> None:
         cmd = f'{FilePath.STEAMCMD_DIR}/steamcmd.sh ' \
               f'+force_install_dir {FilePath.DST_DIR} ' \
@@ -136,19 +177,6 @@ class Agent:
               f'+quit'
         process = self._run_process(cmd, stdout=self._update_stdout_write)
         process.communicate()
-
-    def update(self) -> None:
-        status = self.status
-        self.status = self.STATUS_UPDATE
-        if status == self.STATUS_ACTIVE:
-            self.stop()
-
-        self._init_stdout()
-        self._update()
-
-        self.status = status
-        if status == self.STATUS_ACTIVE:
-            self.run()
 
     def __run_cmd(self, cmd: str, process: Popen, timeout=5):
         if not cmd.endswith('\n'):
@@ -182,11 +210,6 @@ class Agent:
                     return Constants.RET_FAILED, tmp
                 out += tmp
         return Constants.RET_SUCCEED, out
-
-    def run_cmd(self, cmd: str, send_all=False) -> (int, str):
-        if self.status != self.STATUS_ACTIVE:
-            return Constants.RET_FAILED, f'server is {self.status.lower()}, do nothing'
-        return self._run_cmd(cmd, send_all)
 
     def _try_close_stdout(self):
         if self._master_stdout_write:

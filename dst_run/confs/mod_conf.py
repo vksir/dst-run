@@ -9,24 +9,8 @@ from dst_run.confs.base_conf import BaseConf
 
 class ModConf(BaseConf):
     def deploy(self):
-        mod_setting = 'return {\n'
-        for mod in self.values():
-            mod_enable = mod['enable']
-            mod_config = mod['config']
-            if not mod_enable:
-                continue
-            mod_setting += f'  {mod_config},\n'
-        mod_setting = mod_setting[:-2] + '}\n'
-        with open(FilePath.MASTER_MOD_SETTING_PATH, 'w', encoding='utf-8') as f:
-            f.write(mod_setting)
-        with open(FilePath.CAVES_MOD_SETTING_PATH, 'w', encoding='utf-8') as f:
-            f.write(mod_setting)
-
-        mod_setup = ''
-        for mod_id in self:
-            mod_setup += f'ServerModSetup("{mod_id}")\n'
-        with open(FilePath.MOD_SETUP_PATH, 'w', encoding='utf-8') as f:
-            f.write(mod_setup)
+        self._deploy_mod_setting()
+        self._deploy_mod_setup()
 
     def load(self):
         with open(FilePath.MASTER_MOD_SETTING_PATH, 'r', encoding='utf-8') as f:
@@ -35,8 +19,34 @@ class ModConf(BaseConf):
             mod['enable'] = False
         self.add_by_content(content)
 
-    def _get_init_data(self):
+    @property
+    def _default(self) -> dict:
         return {}
+
+    def _deploy_mod_setting(self):
+        mod_setting = 'return {\n'
+        for mod in self.values():
+            mod_enable = mod['enable']
+            mod_config = mod['config']
+            if not mod_enable:
+                continue
+            mod_setting += f'  {mod_config},\n'
+        mod_setting = mod_setting[:-2] + '\n}'
+        with open(FilePath.MASTER_MOD_SETTING_PATH, 'w', encoding='utf-8') as f:
+            f.write(mod_setting)
+        with open(FilePath.CAVES_MOD_SETTING_PATH, 'w', encoding='utf-8') as f:
+            f.write(mod_setting)
+
+    def _deploy_mod_setup(self):
+        mod_setup = ''
+        for mod in self.values():
+            mod_id = mod['id']
+            mod_enable = mod['enable']
+            if not mod_enable:
+                continue
+            mod_setup += f'ServerModSetup("{mod_id}")\n'
+        with open(FilePath.MOD_SETUP_PATH, 'w', encoding='utf-8') as f:
+            f.write(mod_setup)
 
     @property
     def mod_ids(self) -> List[str]:

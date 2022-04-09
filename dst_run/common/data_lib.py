@@ -38,3 +38,11 @@ class DataLib:
             else:
                 data[key] = str(value)
         return data
+
+    @classmethod
+    def set_default(cls, data, default_data: dict):
+        for k, v in default_data.items():
+            if k not in data:
+                data[k] = v
+            elif isinstance(v, dict):
+                cls.set_default(data[k], v)

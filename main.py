@@ -7,5 +7,6 @@ if __name__ == '__main__':
     uvicorn.run('dst_run.app.app:app',
                 host=host,
                 port=5800,
-                reload=True)
+                reload=True,
+                access_log=False)
 

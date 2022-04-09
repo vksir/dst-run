@@ -34,7 +34,9 @@ class FilePath:
     CLUSTER_TOKEN_PATH = f'{CLUSTERS_DIR}/{CLUSTER_NAME}/cluster_token.txt'
     MASTER_WORLD_SETTING_PATH = f'{CLUSTERS_DIR}/{CLUSTER_NAME}/Master/leveldataoverride.lua'
     MASTER_MOD_SETTING_PATH = f'{CLUSTERS_DIR}/{CLUSTER_NAME}/Master/modoverrides.lua'
+    MASTER_MOD_SAVE_DIR = f'{CLUSTERS_DIR}/{CLUSTER_NAME}/Master/save'
     CAVES_WORLD_SETTING_PATH = f'{CLUSTERS_DIR}/{CLUSTER_NAME}/Caves/leveldataoverride.lua'
     CAVES_MOD_SETTING_PATH = f'{CLUSTERS_DIR}/{CLUSTER_NAME}/Caves/modoverrides.lua'
+    CAVES_MOD_SAVE_DIR = f'{CLUSTERS_DIR}/{CLUSTER_NAME}/Caves/save'
 
 

@@ -13,6 +13,8 @@ def run_cmd(cmd: str, cwd=None, sudo=False):
     ret, out = p.communicate()
     if ret:
         log.error(f'rum cmd failed: cmd={cmd}, out={out}')
+    else:
+        log.info(f'run cmd succeed: cmd={cmd}, out={out}')
     return ret, out
 
 
