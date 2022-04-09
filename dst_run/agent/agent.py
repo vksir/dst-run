@@ -143,13 +143,17 @@ class Agent:
                         out = out[:-1]
                     MSG_QUEUE.produce(out)
 
-            while is_active():
-                with lock:
-                    line = readline()
-                if line:
-                    deal_stdout(line)
-                    continue
-                sleep()
+            try:
+                while is_active():
+                    with lock:
+                        line = readline()
+                    if line:
+                        deal_stdout(line)
+                        continue
+                    sleep()
+            except Exception as e:
+                log.error(f'exit stdout_reader thread: {e}')
+                return
             log.info('exit stdout_reader thread')
 
         threading.Thread(target=stdout_reader).start()
