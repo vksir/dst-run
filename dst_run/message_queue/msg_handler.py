@@ -29,7 +29,7 @@ class MsgHandler(threading.Thread):
         while True:
             msg = MSG_QUEUE.consume()
             if msg is not None:
-                REPORTER.report(msg.msg)
+                REPORTER.report_raw_message(msg.msg)
                 continue
             time.sleep(1)
 

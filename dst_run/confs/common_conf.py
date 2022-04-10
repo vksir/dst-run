@@ -18,12 +18,18 @@ class CommonConf(BaseConf):
         return {
             'nickname': '',
             'uuid': str(uuid.uuid4()),
-            'ip_whitelist': [],
             'enable_64bit': True,
             'enable_caves': True,
             'version': version,
+            'authenticate': {
+                'enable': True,
+                'host': '127.0.0.1',
+                'port': 12599,
+                'ip_whitelist': ['127.0.0.1'],
+            },
             'report': {
-                'url': 'http://127.0.0.1:5701',
+                'host': '127.0.0.1',
+                'port': 5701,
                 'level': 'debug'
             }
         }
@@ -37,10 +43,20 @@ class CommonConf(BaseConf):
         return self['uuid']
 
     @property
-    def ip_whitelist(self) -> List[str]:
-        ip_whitelist = self.get('ip_whitelist', [])
-        ip_whitelist.append('127.0.0.1')
-        return ip_whitelist
+    def authenticate_enable(self) -> bool:
+        return self['authenticate']['enable']
+
+    @property
+    def authenticate_host(self) -> str:
+        return self['authenticate']['host']
+
+    @property
+    def authenticate_port(self) -> int:
+        return self['authenticate']['port']
+
+    @property
+    def authenticate_ip_whitelist(self) -> List[str]:
+        return self['authenticate']['ip_whitelist']
 
     @property
     def enable_64bit(self) -> bool:
@@ -55,8 +71,12 @@ class CommonConf(BaseConf):
         return self.get('version', '')
 
     @property
-    def report_url(self) -> str:
-        return self['report']['url']
+    def report_host(self) -> str:
+        return self['report']['host']
+
+    @property
+    def report_port(self) -> int:
+        return self['report']['port']
 
     @property
     def report_level(self) -> str:

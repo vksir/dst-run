@@ -2,18 +2,19 @@ import re
 
 import httpx
 from dst_run.common.log import log
+from dst_run.common.constants import Constants
 from dst_run.confs.confs import CONF
 
 
 class Reporter:
-    def report(self, raw_message: str):
+    def report_raw_message(self, raw_message: str):
         msg, level = self._deal_with_raw_message(raw_message)
         if msg is None:
             return
         is_need_report = self._filter_level(level)
         if not is_need_report:
             return
-        self._report(msg, level)
+        self.report(msg, level)
 
     @staticmethod
     def _deal_with_raw_message(raw_message: str):
@@ -84,8 +85,10 @@ class Reporter:
         return level_num[level] > level_num[report_level]
 
     @staticmethod
-    def _report(msg: str, level: str):
-        url = f'{CONF.common.report_url}/dst_run'
+    def report(msg: str, level: str):
+        host = CONF.common.report_host
+        port = CONF.common.report_port
+        url = f'http://{host}:{port}/{Constants.COMPONENT}'
         try:
             res = httpx.post(url, json={
                 'nickname': CONF.common.nickname,

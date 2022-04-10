@@ -18,6 +18,8 @@ from dst_run.message_queue.msg_handler import MSG_QUEUE
 
 __all__ = ['AGENT']
 
+from dst_run.reporter.reporter import REPORTER
+
 
 class Agent:
     STATUS_INACTIVE = 'INACTIVE'
@@ -135,7 +137,6 @@ class Agent:
                     '[Say]',
                     '[Announcement]',
                     'Starting master server',
-                    'Shutting down',
                     'Sim paused'
                 ]
                 if any(msg in out for msg in special_msg):
@@ -151,10 +152,10 @@ class Agent:
                         deal_stdout(line)
                         continue
                     sleep()
+                log.info('exit stdout_reader thread')
             except Exception as e:
                 log.error(f'exit stdout_reader thread: {e}')
-                return
-            log.info('exit stdout_reader thread')
+            REPORTER.report('服务器停止运行', 'error')
 
         threading.Thread(target=stdout_reader).start()
 

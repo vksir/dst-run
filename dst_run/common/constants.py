@@ -6,6 +6,8 @@ class Constants:
     RET_SUCCEED = 0
     RET_FAILED = 1
 
+    COMPONENT = 'dst_run'
+
 
 class FilePath:
     HOME = os.environ['HOME'] if platform.system() == 'Linux' else os.environ['USERPROFILE']

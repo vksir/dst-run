@@ -19,7 +19,7 @@ async def get_server_status():
     return Response(status=AGENT.status)
 
 
-@app.get('/server/player-list', tags=['server'], response_model=Response, summary='显示在线玩家')
+@app.get('/server/player_list', tags=['server'], response_model=Response, summary='显示在线玩家')
 @lock
 async def player_list():
     ret, out = send_command('c_listallplayers()', send_all=True)

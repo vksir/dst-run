@@ -5,6 +5,7 @@ from dst_run.common.log import log
 
 log.info('start dst-run')
 app = FastAPI(title='DST RUN', version='0.1.0')
+import_module('dst_run.app.routes.middlewares')
 import_module('dst_run.app.routes.routes')
 import_module('dst_run.app.routes.action_routes')
 import_module('dst_run.app.routes.server_routes')

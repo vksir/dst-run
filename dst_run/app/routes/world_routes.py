@@ -8,7 +8,7 @@ from dst_run.confs.confs import CONF
 from dst_run.common.asyncio_lock import lock
 
 
-@app.get('/world/master', tags=['world'], response_model=Master, summary='获取上世界设置')
+@app.get('/world/master', tags=['world'], response_model=Response, summary='获取上世界设置')
 async def get_master_world_setting():
     world = ResponseWorld(master=CONF.world.master)
     return Response(world=world)
@@ -23,7 +23,7 @@ async def set_master_world_setting(master: Master):
     return Response()
 
 
-@app.get('/world/caves', tags=['world'], response_model=Caves, summary='获取地下世界设置')
+@app.get('/world/caves', tags=['world'], response_model=Response, summary='获取地下世界设置')
 async def get_caves_world_setting():
     world = ResponseWorld(caves=CONF.world.caves)
     return Response(world=world)
