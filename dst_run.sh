@@ -13,7 +13,7 @@ function check_args() {
 
 
 function run() {
-    uvicorn --host 0.0.0.0 --port 5800 --reload dst_run.app.app:app
+    uvicorn --host 0.0.0.0 --port 5800 dst_run.app.app:app
 }
 
 function main() {

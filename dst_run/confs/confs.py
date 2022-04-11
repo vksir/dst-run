@@ -73,7 +73,7 @@ class Confs(BaseConf):
     @staticmethod
     def _save(data: dict) -> None:
         with open(FilePath.CFG_PATH, 'w', encoding='utf-8') as f:
-            yaml.dump(data, f)
+            yaml.dump(data, f, allow_unicode=True)
 
     def save(self):
         self['common'] = dict(self.common)
