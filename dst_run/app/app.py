@@ -6,6 +6,7 @@ from dst_run.app.dependencies import get_dependencies
 from dst_run.app.routes import routes
 from dst_run.app.routes import action_routes
 from dst_run.app.routes import server_routes
+from dst_run.app.routes import admin_routes
 from dst_run.app.routes import cluster_routes
 from dst_run.app.routes import template_routes
 from dst_run.app.routes import backup_cluster_routes
@@ -22,6 +23,7 @@ app.add_middleware(BaseHTTPMiddleware,
 app.include_router(routes.router)
 app.include_router(action_routes.router)
 app.include_router(server_routes.router)
+app.include_router(admin_routes.router)
 app.include_router(cluster_routes.router)
 app.include_router(template_routes.router)
 app.include_router(backup_cluster_routes.router)

@@ -30,6 +30,7 @@ class Response(BaseModel):
     ret: Ret = Ret.SUCCEED
     detail: str = ''
     status: Status = None
+    admins: List[str] = None
     cluster: ResponseCluster = None
     room: Room = None
     world: ResponseWorld = None

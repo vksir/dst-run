@@ -35,11 +35,11 @@ class ClusterConf(BaseConf):
             f.write(self.token)
 
     @property
-    def admins(self):
+    def admins(self) -> List[str]:
         return self['admins']
 
     @property
-    def token(self):
+    def token(self) -> str:
         return self['token']
 
     # cluster
@@ -129,3 +129,7 @@ class ClusterConf(BaseConf):
     @staticmethod
     def _get_backup_cluster_path(backup_cluster: str):
         return f'{FilePath.CLUSTERS_BACKUP_DIR}/{backup_cluster}.tar.gz'
+
+    # admin
+    def add_admin(self, admin: str):
+        self.admins.append(admin)
