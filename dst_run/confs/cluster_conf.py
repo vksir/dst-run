@@ -55,18 +55,40 @@ class ClusterConf(BaseConf):
             log.error(f'template not found: template={template}')
             return Constants.RET_FAILED
 
-        self.create_backup_cluster()
+        self.create_backup_cluster_by_cluster()
         FileLib.remove(FilePath.CLUSTER_PATH)
         FileLib.copy(template_path, FilePath.CLUSTER_PATH)
         return Constants.RET_SUCCEED
 
-    def create_cluster_by_backup_cluster(self, backup_cluster: str):
-        pass
+    @staticmethod
+    def create_cluster_by_backup_cluster(name: str):
+        backup_cluster_path = f'{FilePath.CLUSTERS_BACKUP_DIR}/{name}.tar.gz'
+        if not os.path.exists(backup_cluster_path):
+            log.error(f'backup_cluster not found: backup_cluster={name}')
+            return
+        FileLib.remove(FilePath.CLUSTER_PATH)
+        run_cmd(f'tar -xzf {backup_cluster_path} {FilePath.CLUSTER_NAME}',
+                cwd=FilePath.CLUSTERS_DIR)
+
+    def clean_cluster_save(self):
+        self._clean_cluster_save(FilePath.CLUSTER_PATH)
 
     @staticmethod
-    def clean_cluster_save():
-        FileLib.remove(FilePath.MASTER_MOD_SAVE_DIR)
-        FileLib.remove(FilePath.CAVES_MOD_SAVE_DIR)
+    def _clean_cluster_save(cluster_path: str):
+        paths = [
+            f'{cluster_path}/adminlist.txt',
+            f'{cluster_path}/cluster_token.txt',
+            f'{cluster_path}/Master/save',
+            f'{cluster_path}/Master/backup',
+            f'{cluster_path}/Master/server_log.txt',
+            f'{cluster_path}/Master/server_chat_log.txt',
+            f'{cluster_path}/Caves/save',
+            f'{cluster_path}/Caves/backup',
+            f'{cluster_path}/Caves/server_log.txt',
+            f'{cluster_path}/Caves/server_chat_log.txt',
+        ]
+        for path in paths:
+            FileLib.remove(path)
 
     # template
     @property
@@ -77,8 +99,10 @@ class ClusterConf(BaseConf):
     def custom_templates(self) -> List[str]:
         return os.listdir(FilePath.CUSTOM_TEMPLATE_DIR)
 
-    def create_custom_template(self, name: str):
-        pass
+    def create_custom_template_by_cluster(self, name: str):
+        template_path = self._get_custom_template_path(name)
+        FileLib.copy(FilePath.CLUSTER_PATH, template_path)
+        self._clean_cluster_save(template_path)
 
     def delete_custom_template(self, name: str):
         custom_template_path = self._get_custom_template_path(name)
@@ -107,13 +131,16 @@ class ClusterConf(BaseConf):
         return clusters
 
     @staticmethod
-    def create_backup_cluster(name: str = None):
+    def create_backup_cluster_by_cluster(name: str = None):
         if not os.path.exists(FilePath.CLUSTER_PATH):
             return
         if name is None:
             name = time.strftime(f'%Y-%m-%d_%H-%M-%S', time.localtime())
         run_cmd(f'tar -czf {FilePath.CLUSTERS_BACKUP_DIR}/{name}.tar.gz {FilePath.CLUSTER_NAME}',
                 cwd=FilePath.CLUSTERS_DIR)
+
+    def create_backup_cluster_by_upload(self):
+        pass
 
     def delete_backup_cluster(self, name: str):
         backup_cluster_path = self._get_backup_cluster_path(name)
@@ -125,6 +152,9 @@ class ClusterConf(BaseConf):
         if not os.path.exists(old_path):
             return
         FileLib.move(old_path, new_path)
+
+    def download_backup_cluster(self):
+        pass
 
     @staticmethod
     def _get_backup_cluster_path(backup_cluster: str):

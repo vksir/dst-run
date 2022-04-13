@@ -20,4 +20,5 @@ async def create_cluster_by_template(name: str):
 
 @router.post('/cluster/backup_cluster/{name}', summary='从备份存档创建存档')
 async def create_cluster_by_backup_cluster(name: str):
-    pass
+    TASK_QUEUE.produce(CONF.cluster.create_cluster_by_backup_cluster, name)
+    return Response()

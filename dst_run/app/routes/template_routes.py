@@ -17,7 +17,7 @@ async def list_template():
 
 @router.post('/template/{name}', summary='创建模板')
 async def create_custom_template(name: str):
-    TASK_QUEUE.produce(CONF.cluster.create_custom_template, name)
+    TASK_QUEUE.produce(CONF.cluster.create_custom_template_by_cluster, name)
     return Response()
 
 

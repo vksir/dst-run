@@ -88,7 +88,7 @@ class Controller:
         if is_active:
             self.start()
 
-    def run_cmd(self, cmd: str, process_name: str) -> (int, str):
+    def run_cmd(self, cmd: str, process_name=Constants.MASTER) -> (int, str):
         if self.status != self.STATUS_ACTIVE:
             return Constants.RET_FAILED, f'server is {self.status.lower()}, do nothing'
         if process_name not in self._agents:
