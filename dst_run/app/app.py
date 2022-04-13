@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
 from dst_run.common.log import log
 from dst_run.app import middlewares
+from dst_run.app.dependencies import get_dependencies
 from dst_run.app.routes import routes
 from dst_run.app.routes import action_routes
 from dst_run.app.routes import server_routes
@@ -14,7 +15,8 @@ from dst_run.app.routes import mod_routes
 
 
 log.info('start dst-run')
-app = FastAPI(title='DST RUN', version='0.1.0')
+app = FastAPI(title='DST RUN', version='0.1.0', dependencies=get_dependencies())
+
 app.add_middleware(BaseHTTPMiddleware,
                    dispatch=middlewares.add_process_time_header)
 app.include_router(routes.router)

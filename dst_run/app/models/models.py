@@ -3,11 +3,11 @@ from pydantic import BaseModel
 
 
 class Action(Enum):
-    START = 'START'
-    STOP = 'STOP'
-    RESTART = 'RESTART'
-    UPDATE = 'UPDATE'
-    REGENERATE = 'REGENERATE'
+    START = 'start'
+    STOP = 'stop'
+    RESTART = 'restart'
+    UPDATE = 'update'
+    REGENERATE = 'regenerate'
 
 
 class GameMode(Enum):

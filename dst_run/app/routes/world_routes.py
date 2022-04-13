@@ -1,6 +1,4 @@
 from fastapi import APIRouter
-from fastapi import Depends
-from dst_run.app.dependencies import verify_token
 from dst_run.common.data_lib import DataLib
 from dst_run.app.models.world_setting_models import Master
 from dst_run.app.models.world_setting_models import Caves
@@ -9,8 +7,7 @@ from dst_run.app.models.response_models import ResponseWorld
 from dst_run.confs.confs import CONF
 
 
-router = APIRouter(tags=['world'],
-                   dependencies=[Depends(verify_token)])
+router = APIRouter(tags=['world'])
 
 
 @router.get('/world/master', summary='获取上世界设置')

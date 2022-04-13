@@ -7,14 +7,14 @@ from dst_run.confs.confs import CONF
 
 
 class Reporter:
-    def report_raw_message(self, raw_message: str):
+    def report_raw_message(self, process: str, raw_message: str):
         msg, level = self._deal_with_raw_message(raw_message)
         if msg is None:
             return
         is_need_report = self._filter_level(level)
         if not is_need_report:
             return
-        self.report(msg, level)
+        self.report(f'[{process}] {msg}', level)
 
     @staticmethod
     def _deal_with_raw_message(raw_message: str):

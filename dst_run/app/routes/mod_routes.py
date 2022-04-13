@@ -1,8 +1,6 @@
 from typing import List
 from fastapi import Query
 from fastapi import APIRouter
-from fastapi import Depends
-from dst_run.app.dependencies import verify_token
 from dst_run.common.data_lib import DataLib
 from dst_run.app.models.models import Ret
 from dst_run.app.models.models import Mod
@@ -10,8 +8,7 @@ from dst_run.app.models.response_models import Response
 from dst_run.confs.confs import CONF
 
 
-router = APIRouter(tags=['mod'], 
-                   dependencies=[Depends(verify_token)])
+router = APIRouter(tags=['mod'])
 
 
 @router.get('/mod', summary='获取 Mod 列表')

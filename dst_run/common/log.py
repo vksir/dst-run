@@ -6,7 +6,7 @@ from dst_run.common.constants import FilePath
 
 
 log = logging.getLogger(__name__)
-formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] [%(filename)s] %(message)s')
+formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] [%(filename)s] [%(threadName)s] %(message)s')
 log.setLevel(logging.DEBUG)
 
 

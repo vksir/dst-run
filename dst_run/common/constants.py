@@ -8,6 +8,9 @@ class Constants:
 
     COMPONENT = 'dst_run'
 
+    MASTER = 'Master'
+    CAVES = 'Caves'
+
 
 class FilePath:
     HOME = os.environ['HOME'] if platform.system() == 'Linux' else os.environ['USERPROFILE']
@@ -16,6 +19,7 @@ class FilePath:
     CFG_PATH = f'{CFG_DIR}/cfg.yaml'
     LOG_PATH = f'{CFG_DIR}/dst_run.log'
     CUSTOM_TEMPLATE_DIR = f'{CFG_DIR}/cluster_template'
+    GAME_LOG_PATH = f'{CFG_DIR}/game.log'
     GAME_MASTER_LOG_PATH = f'{CFG_DIR}/master.log'
     GAME_CAVES_LOG_PATH = f'{CFG_DIR}/caves.log'
     GAME_UPDATE_LOG_PATH = f'{CFG_DIR}/update.log'

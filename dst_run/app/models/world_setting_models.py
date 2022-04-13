@@ -33,14 +33,6 @@ class Rarity(str, Enum):
 class SpecialEvent(str, Enum):
     none = 'none'
     default = 'default'
-    crow_carnival = 'crow_carnival'
-    hallowed_nights = 'hallowed_nights'
-    winters_feast = 'winters_feast'
-    year_of_the_gobbler = 'year_of_the_gobbler'
-    year_of_the_varg = 'year_of_the_varg'
-    year_of_the_pig = 'year_of_the_pig'
-    year_of_the_carrat = 'year_of_the_carrat'
-    year_of_the_beefalo = 'year_of_the_beefalo'
 
 
 class SpecialEventEnable(str, Enum):

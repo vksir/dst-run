@@ -1,15 +1,11 @@
-from fastapi import Query
 from fastapi import APIRouter
-from fastapi import Depends
-from dst_run.app.dependencies import verify_token
 from dst_run.confs.confs import CONF
 from dst_run.app.models.response_models import Response
 from dst_run.app.models.response_models import ResponseCluster
 from dst_run.message_queue.task_handler import TASK_QUEUE
 
 
-router = APIRouter(tags=['backup cluster'], 
-                   dependencies=[Depends(verify_token)])
+router = APIRouter(tags=['backup cluster'])
 
 
 @router.get('/backup_cluster', summary='获取备份存档列表')
@@ -31,6 +27,6 @@ async def delete_backup_cluster(name: str):
 
 
 @router.put('/backup_cluster/{name}', summary='重命名备份存档')
-async def rename_backup_cluster(name: str, new_name: str = Query(..., alias='name')):
+async def rename_backup_cluster(name: str, new_name: str):
     TASK_QUEUE.produce(CONF.cluster.rename_backup_cluster, name, new_name)
     return Response()

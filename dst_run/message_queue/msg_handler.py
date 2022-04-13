@@ -9,13 +9,14 @@ __all__ = ['MSG_QUEUE']
 
 
 class Msg:
-    def __init__(self, msg: str):
+    def __init__(self, process: str, msg: str):
+        self.process = process
         self.msg = msg
 
 
 class MsgQueue(BaseQueue):
-    def produce(self, msg: str) -> None:
-        self._que.put(Msg(msg))
+    def produce(self, process: str, msg: str) -> None:
+        self._que.put(Msg(process, msg))
 
     def consume(self) -> Union[Msg, None]:
         if self._que.empty():
@@ -29,7 +30,7 @@ class MsgHandler(threading.Thread):
         while True:
             msg = MSG_QUEUE.consume()
             if msg is not None:
-                REPORTER.report_raw_message(msg.msg)
+                REPORTER.report_raw_message(msg.process, msg.msg)
                 continue
             time.sleep(1)
 
