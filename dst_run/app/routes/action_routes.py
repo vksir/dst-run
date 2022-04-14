@@ -9,7 +9,7 @@ from dst_run.message_queue.task_handler import TASK_QUEUE
 router = APIRouter()
 
 
-@router.post('/action/{action}', summary='饥荒服务器控制')
+@router.post('/action/{action}', response_model=Response, summary='饥荒服务器控制')
 async def action(act: Action = Path(..., alias='action')):
     TASK_QUEUE.produce(getattr(CONTROLLER, act.value.lower()))
     return Response()

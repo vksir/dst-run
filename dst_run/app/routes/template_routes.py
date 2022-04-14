@@ -8,26 +8,26 @@ from dst_run.message_queue.task_handler import TASK_QUEUE
 router = APIRouter(tags=['cluster template'])
 
 
-@router.get('/template', summary='获取模板列表')
+@router.get('/template', response_model=Response, summary='获取模板列表')
 async def list_template():
     cluster = ResponseCluster(default_templates=CONF.cluster.default_templates,
                               custom_templates=CONF.cluster.custom_templates)
     return Response(cluster=cluster)
 
 
-@router.post('/template/{name}', summary='创建模板')
+@router.post('/template/{name}', response_model=Response, summary='创建模板')
 async def create_custom_template(name: str):
     TASK_QUEUE.produce(CONF.cluster.create_custom_template_by_cluster, name)
     return Response()
 
 
-@router.delete('/template/{name}', summary='删除模板')
+@router.delete('/template/{name}', response_model=Response, summary='删除模板')
 async def delete_custom_template(name: str):
     TASK_QUEUE.produce(CONF.cluster.delete_custom_template, name)
     return Response()
 
 
-@router.put('/template/{name}', summary='重命名模板')
+@router.put('/template/{name}', response_model=Response, summary='重命名模板')
 async def rename_custom_template(name: str, new_name: str):
     TASK_QUEUE.produce(CONF.cluster.rename_custom_template, name, new_name)
     return Response()

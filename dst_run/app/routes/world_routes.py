@@ -10,13 +10,13 @@ from dst_run.confs.confs import CONF
 router = APIRouter(tags=['world'])
 
 
-@router.get('/world/master', summary='获取上世界设置')
+@router.get('/world/master', response_model=Response, summary='获取上世界设置')
 async def get_master_world_setting():
     world = ResponseWorld(master=CONF.world.master)
     return Response(world=world)
 
 
-@router.put('/world/master', summary='设置地上世界')
+@router.put('/world/master', response_model=Response, summary='设置地上世界')
 async def set_master_world_setting(master: Master):
     data = DataLib.filter_value_none(master.dict())
     data = DataLib.convert_value_to_str(data)
@@ -25,13 +25,13 @@ async def set_master_world_setting(master: Master):
     return Response()
 
 
-@router.get('/world/caves', summary='获取地下世界设置')
+@router.get('/world/caves', response_model=Response, summary='获取地下世界设置')
 async def get_caves_world_setting():
     world = ResponseWorld(caves=CONF.world.caves)
     return Response(world=world)
 
 
-@router.put('/world/caves', summary='设置地下世界')
+@router.put('/world/caves', response_model=Response, summary='设置地下世界')
 async def set_caves_world_setting(caves: Caves):
     data = DataLib.filter_value_none(caves.dict())
     data = DataLib.convert_value_to_str(data)
