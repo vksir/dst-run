@@ -41,3 +41,8 @@ async def verify_token(request: Request, authorization: str = Header(...)):
         log.error(f'verify_token failed: status={res.status_code}, content={res.text}')
         detail = json.loads(res.text).get('detail', 'Signature verification failed')
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
+
+
+async def verify_ip(request: Request):
+    if request.client.host not in ip_whitelist:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No access')

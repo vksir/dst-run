@@ -1,6 +1,7 @@
 from typing import List
 from fastapi import Query
 from fastapi import APIRouter
+from fastapi import Body
 from dst_run.common.data_lib import DataLib
 from dst_run.app.models.models import Ret
 from dst_run.app.models.models import Mod
@@ -26,9 +27,9 @@ async def mod_show(mod_id: str):
 
 
 @router.post('/mod', response_model=Response, summary='添加 Mod')
-async def mod_add(content: str = None, mod_ids: List[str] = Query(None, alias='mod_id')):
-    if content:
-        ret = CONF.mod.add_by_content(content)
+async def mod_add(body: str = Body(None, media_type='text/plain'), mod_ids: List[str] = Query(None, alias='mod_id')):
+    if body:
+        ret = CONF.mod.add_by_content(body)
         if ret:
             return Response(ret=Ret.FAILED, detail='invalid mod file content')
     if mod_ids:
