@@ -2,6 +2,9 @@ from typing import List
 from fastapi import Query
 from fastapi import APIRouter
 from fastapi import Body
+from fastapi import HTTPException
+from fastapi import status
+from pydantic import BaseModel
 from dst_run.common.data_lib import DataLib
 from dst_run.app.models.models import Ret
 from dst_run.app.models.models import Mod
@@ -10,6 +13,13 @@ from dst_run.confs.confs import CONF
 
 
 router = APIRouter(tags=['mod'])
+
+
+class ModModify(BaseModel):
+    id: str
+    config: str = None
+    remark: str = None
+    enable: bool = None
 
 
 @router.get('/mod', response_model=Response, summary='获取 Mod 列表')
@@ -41,17 +51,21 @@ async def mod_add(body: str = Body(None, media_type='text/plain'), mod_ids: List
 
 @router.delete('/mod', response_model=Response, summary='删除 Mod')
 async def mod_del(mod_ids: List[str]):
-    CONF.mod.delete_backup_cluster(mod_ids)
+    CONF.mod.delete_mod_by_ids(mod_ids)
     CONF.save()
     return Response()
 
 
-@router.put('/mod/{mod_id}', response_model=Response, summary='设置 Mod')
-async def mod_modify(mod_id: str, mod: Mod):
-    data = DataLib.filter_value_none(mod.dict())
-    data = DataLib.filter_key(data, ['id', 'name', 'version'])
-    ret = CONF.mod.update_mod(mod_id, data)
-    if ret:
-        return Response(ret=Ret.FAILED, detail='mod_id not exists')
+@router.put('/mod', response_model=Response, summary='设置 Mod')
+async def mod_modify(mods: List[ModModify]):
+    mod_ids = [mod.id for mod in mods]
+    not_exists_mod_ids = list(set(mod_ids) - set(CONF.mod.mods))
+    if not_exists_mod_ids:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'mod_id not exists: {not_exists_mod_ids}')
+
+    for mod in mods:
+        mod_id = mod.id
+        data = DataLib.filter_value_none(mod.dict())
+        CONF.mod.update_mod(mod_id, data)
     CONF.save()
     return Response()

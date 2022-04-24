@@ -1,3 +1,6 @@
+import signal
+import sys
+
 from fastapi import FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
 from dst_run.common.log import log

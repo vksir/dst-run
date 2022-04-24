@@ -61,11 +61,8 @@ class ModConf(BaseConf):
             return None
         return self[mod_id]
 
-    def update_mod(self, mod_id: str, mod_data: dict) -> int:
-        if mod_id not in self:
-            return Constants.RET_FAILED
+    def update_mod(self, mod_id: str, mod_data: dict):
         self[mod_id].update(mod_data)
-        return Constants.RET_SUCCEED
 
     def _add_mod(self, mod_id: str, mod_config: str):
         self[mod_id] = {
