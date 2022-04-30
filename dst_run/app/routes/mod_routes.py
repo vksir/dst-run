@@ -1,4 +1,6 @@
 from typing import List
+import httpx
+from lxml import etree
 from fastapi import Query
 from fastapi import APIRouter
 from fastapi import Body
@@ -28,7 +30,7 @@ async def mod_list():
     return Response(mods=mods)
 
 
-@router.get('/mod/show/{mod_id}', response_model=Response, summary='获取 Mod 详细信息')
+@router.get('/mod/{mod_id}', response_model=Response, summary='获取 Mod 详细信息')
 async def mod_show(mod_id: str):
     mod = CONF.mod.get_mod(mod_id)
     if mod is None:
@@ -50,7 +52,7 @@ async def mod_add(body: str = Body(None, media_type='text/plain'), mod_ids: List
 
 
 @router.delete('/mod', response_model=Response, summary='删除 Mod')
-async def mod_del(mod_ids: List[str]):
+async def mod_del(mod_ids: List[str] = Query(..., alias='mod_id')):
     CONF.mod.delete_mod_by_ids(mod_ids)
     CONF.save()
     return Response()
@@ -59,7 +61,7 @@ async def mod_del(mod_ids: List[str]):
 @router.put('/mod', response_model=Response, summary='设置 Mod')
 async def mod_modify(mods: List[ModModify]):
     mod_ids = [mod.id for mod in mods]
-    not_exists_mod_ids = list(set(mod_ids) - set(CONF.mod.mods))
+    not_exists_mod_ids = list(set(mod_ids) - set(CONF.mod.mod_ids))
     if not_exists_mod_ids:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'mod_id not exists: {not_exists_mod_ids}')
 
@@ -69,3 +71,39 @@ async def mod_modify(mods: List[ModModify]):
         CONF.mod.update_mod(mod_id, data)
     CONF.save()
     return Response()
+
+
+@router.post('/mod/{mod_id}/info', response_model=Response, summary='自动获取 Mod 名称及版本')
+async def update_mod_name_and_version(mod_id: str):
+    if mod_id not in CONF.mod.mod_ids:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='mod not exists')
+    proxy = CONF.common.proxy
+    if not proxy:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='proxy not configured')
+    try:
+        url = f'https://steamcommunity.com/sharedfiles/filedetails/?id={mod_id}'
+        res = httpx.get(url, proxies={'all://': proxy}, timeout=5)
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='steam community not responding')
+    if res.status_code != 200:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='steam community access denied')
+
+    html = etree.HTML(res.text)
+    elements = html.xpath("//div[@class='workshopItemTitle']")
+    element_texts = [ele.text for ele in elements]
+    if len(element_texts) != 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='invalid mod id')
+    name = element_texts[0]
+
+    elements = html.xpath("//div[@class='workshopTags']//a")
+    element_texts = [ele.text for ele in elements]
+    if len(element_texts) != 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='invalid mod id')
+    version = element_texts[0]
+
+    data = Mod(name=name, version=version).dict()
+    data = DataLib.filter_value_none(data)
+    CONF.mod.update_mod(mod_id, data)
+    CONF.save()
+    mod = CONF.mod.get_mod(mod_id)
+    return Response(mods=[mod])

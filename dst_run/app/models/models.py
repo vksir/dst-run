@@ -44,7 +44,7 @@ class Mod(BaseModel):
     name: str = None
     remark: str = None
     version: str = None
-    enable: bool = True
+    enable: bool = None
 
 
 

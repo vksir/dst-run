@@ -21,6 +21,7 @@ class CommonConf(BaseConf):
             'enable_64bit': True,
             'enable_caves': True,
             'version': version,
+            'proxy': '',
             'authenticate': {
                 'enable': True,
                 'host': '127.0.0.1',
@@ -81,6 +82,10 @@ class CommonConf(BaseConf):
     @property
     def report_level(self) -> str:
         return self['report']['level']
+
+    @property
+    def proxy(self) -> str:
+        return self['proxy']
 
     @staticmethod
     def _load_version():
