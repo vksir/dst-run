@@ -65,14 +65,18 @@ class ModConf(BaseConf):
         self[mod_id].update(mod_data)
 
     def _add_mod(self, mod_id: str, mod_config: str):
-        self[mod_id] = {
-            'id': mod_id,
-            'name': '',
-            'remark': '',
-            'version': '',
-            'config': mod_config,
-            'enable': True
-        }
+        if mod_id not in self:
+            self[mod_id] = {
+                'id': mod_id,
+                'name': '',
+                'remark': '',
+                'version': '',
+                'config': mod_config,
+                'enable': True
+            }
+            return
+        self[mod_id]['config'] = mod_config
+        self[mod_id]['enable'] = True
 
     def add_by_mod_id(self, mod_id: str) -> None:
         mod_config = '["workshop-%s"]={ configuration_options={ }, enabled=true }' % mod_id

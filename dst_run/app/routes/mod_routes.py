@@ -73,13 +73,7 @@ async def mod_modify(mods: List[ModModify]):
     return Response()
 
 
-@router.post('/mod/{mod_id}/info', response_model=Response, summary='自动获取 Mod 名称及版本')
-async def update_mod_name_and_version(mod_id: str):
-    if mod_id not in CONF.mod.mod_ids:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='mod not exists')
-    proxy = CONF.common.proxy
-    if not proxy:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='proxy not configured')
+def get_mod_name_and_version(mod_id: str, proxy: str):
     try:
         url = f'https://steamcommunity.com/sharedfiles/filedetails/?id={mod_id}'
         res = httpx.get(url, proxies={'all://': proxy}, timeout=5)
@@ -100,10 +94,22 @@ async def update_mod_name_and_version(mod_id: str):
     if len(element_texts) != 1:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='invalid mod id')
     version = element_texts[0]
+    return name, version
 
-    data = Mod(name=name, version=version).dict()
-    data = DataLib.filter_value_none(data)
-    CONF.mod.update_mod(mod_id, data)
+
+@router.post('/mod/info', response_model=Response, summary='自动获取 Mod 名称及版本')
+async def update_mods_name_and_version(mod_ids: List[str] = Query(..., alias='mod_id')):
+    not_exists_mod_ids = list(set(mod_ids) - set(CONF.mod.mod_ids))
+    if not_exists_mod_ids:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'mod_id not exists: {not_exists_mod_ids}')
+    proxy = CONF.common.proxy
+    if not proxy:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='proxy not configured')
+
+    for mod_id in mod_ids:
+        name, version = get_mod_name_and_version(mod_id, proxy)
+        data = Mod(name=name, version=version).dict()
+        data = DataLib.filter_value_none(data)
+        CONF.mod.update_mod(mod_id, data)
     CONF.save()
-    mod = CONF.mod.get_mod(mod_id)
-    return Response(mods=[mod])
+    return Response()
