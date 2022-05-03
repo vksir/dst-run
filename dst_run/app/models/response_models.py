@@ -5,8 +5,6 @@ from pydantic import BaseModel
 from dst_run.app.models.models import Ret
 from dst_run.app.models.models import Room
 from dst_run.app.models.models import Mod
-from dst_run.app.models.world_setting_models import Master
-from dst_run.app.models.world_setting_models import Caves
 
 
 class Status(enum.Enum):
@@ -22,8 +20,8 @@ class ResponseCluster(BaseModel):
 
 
 class ResponseWorld(BaseModel):
-    master: Master = None
-    caves: Caves = None
+    master: str = None
+    caves: str = None
 
 
 class Response(BaseModel):

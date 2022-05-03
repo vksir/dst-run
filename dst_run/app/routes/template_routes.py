@@ -17,17 +17,17 @@ async def list_template():
 
 @router.post('/template/{name}', response_model=Response, summary='创建模板')
 async def create_custom_template(name: str):
-    TASK_QUEUE.produce(CONF.cluster.create_custom_template_by_cluster, name)
+    CONF.cluster.create_custom_template_by_cluster(name)
     return Response()
 
 
 @router.delete('/template/{name}', response_model=Response, summary='删除模板')
 async def delete_custom_template(name: str):
-    TASK_QUEUE.produce(CONF.cluster.delete_custom_template, name)
+    CONF.cluster.delete_custom_template(name)
     return Response()
 
 
 @router.put('/template/{name}', response_model=Response, summary='重命名模板')
 async def rename_custom_template(name: str, new_name: str):
-    TASK_QUEUE.produce(CONF.cluster.rename_custom_template, name, new_name)
+    CONF.cluster.rename_custom_template(name, new_name)
     return Response()

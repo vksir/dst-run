@@ -40,7 +40,7 @@ class TestWorldCfgHandler(TestCase):
             key2="value2"
           }
         }""")
-        res = self.test_obj._load('')
+        res = self.test_obj._read('')
         self.assertDictEqual(res, {
             'key1': 'value1',
             'key2': 'value2'

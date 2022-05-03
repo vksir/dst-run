@@ -55,7 +55,6 @@ class ClusterConf(BaseConf):
             log.error(f'template not found: template={template}')
             return Constants.RET_FAILED
 
-        self.create_backup_cluster_by_cluster()
         FileLib.remove(FilePath.CLUSTER_PATH)
         FileLib.copy(template_path, FilePath.CLUSTER_PATH)
         return Constants.RET_SUCCEED

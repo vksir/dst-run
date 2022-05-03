@@ -11,7 +11,7 @@ router = APIRouter(tags=['cluster'])
 @router.post('/cluster/template/{name}', response_model=Response, summary='从模板创建存档')
 async def create_cluster_by_template(name: str):
     if name not in CONF.cluster.default_templates \
-            and name not in CONF.cluster.backup_clusters:
+            and name not in CONF.cluster.custom_templates:
         return Response(ret=Ret.FAILED, detail='template not exists')
     TASK_QUEUE.produce(CONF.cluster.create_cluster_by_template, name, force=True)
     TASK_QUEUE.produce(CONF.load)

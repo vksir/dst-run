@@ -1,7 +1,4 @@
-from fastapi import APIRouter
-from dst_run.common.data_lib import DataLib
-from dst_run.app.models.world_setting_models import Master
-from dst_run.app.models.world_setting_models import Caves
+from fastapi import APIRouter, Body
 from dst_run.app.models.response_models import Response
 from dst_run.app.models.response_models import ResponseWorld
 from dst_run.confs.confs import CONF
@@ -17,11 +14,8 @@ async def get_master_world_setting():
 
 
 @router.put('/world/master', response_model=Response, summary='设置地上世界')
-async def set_master_world_setting(master: Master):
-    data = DataLib.filter_value_none(master.dict())
-    data = DataLib.convert_value_to_str(data)
-    CONF.world.update_master(data)
-    CONF.save()
+async def set_master_world_setting(master: str = Body(None, media_type='text/plain')):
+    CONF.world.update_master(master)
     return Response()
 
 
@@ -32,9 +26,6 @@ async def get_caves_world_setting():
 
 
 @router.put('/world/caves', response_model=Response, summary='设置地下世界')
-async def set_caves_world_setting(caves: Caves):
-    data = DataLib.filter_value_none(caves.dict())
-    data = DataLib.convert_value_to_str(data)
-    CONF.world.update_caves(data)
-    CONF.save()
+async def set_caves_world_setting(caves: str = Body(None, media_type='text/plain')):
+    CONF.world.update_caves(caves)
     return Response()
