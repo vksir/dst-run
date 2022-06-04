@@ -89,7 +89,7 @@ def get_mod_name_and_version(mod_id: str, proxy: str):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='invalid mod id')
     name = element_texts[0]
 
-    elements = html.xpath("//div[@class='workshopTags']//a")
+    elements = html.xpath("//div[@class='workshopTags']/a[1]")
     element_texts = [ele.text for ele in elements]
     if len(element_texts) != 1:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='invalid mod id')

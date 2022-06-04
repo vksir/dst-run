@@ -2,7 +2,6 @@ from fastapi import APIRouter
 from dst_run.confs.confs import CONF
 from dst_run.app.models.response_models import Response
 from dst_run.app.models.response_models import ResponseCluster
-from dst_run.message_queue.task_handler import TASK_QUEUE
 
 
 router = APIRouter(tags=['cluster template'])

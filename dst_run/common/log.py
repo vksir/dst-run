@@ -1,7 +1,5 @@
 import os
 import logging
-
-from dst_run.common import constants
 from dst_run.common.constants import FilePath
 
 
@@ -11,8 +9,7 @@ log.setLevel(logging.DEBUG)
 
 
 def init_path():
-    for path_name in dir(constants):
-        path = getattr(constants, path_name)
+    for path_name, path in FilePath.__dict__.items():
         if (not path_name.endswith('HOME') and not path_name.endswith('DIR')) \
                 or os.path.exists(path):
             continue
