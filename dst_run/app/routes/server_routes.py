@@ -25,7 +25,7 @@ async def player_list():
     if ret:
         return Response(ret=Ret.FAILED, detail=f'caves run_cmd failed: {caves_out}')
     out = master_out + caves_out
-    players = re.findall(r'\[\d+?\] \(.*?\) (.+)\\t', out)
+    players = re.findall(r'\[\d+?\] \(.*?\) (.+?) ', out)
     return Response(players=players)
 
 
