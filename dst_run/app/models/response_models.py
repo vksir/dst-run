@@ -4,13 +4,8 @@ from typing import List
 from pydantic import BaseModel
 from dst_run.app.models.models import Ret
 from dst_run.app.models.models import Room
+from dst_run.app.models.models import Status
 from dst_run.app.models.models import Mod
-
-
-class Status(enum.Enum):
-    INACTIVE = 'INACTIVE'
-    ACTIVE = 'ACTIVE'
-    UPDATE = 'UPDATING'
 
 
 class ResponseCluster(BaseModel):

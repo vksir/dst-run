@@ -46,7 +46,7 @@ class Reporter:
                 'level': 'debug'
             },
             {
-                'pattern': 'Starting master server',
+                'pattern': 'Shard server started',
                 'template': '服务器启动成功',
                 'level': 'error'
             },

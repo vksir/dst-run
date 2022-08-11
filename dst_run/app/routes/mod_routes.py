@@ -34,7 +34,8 @@ async def mod_list():
 async def mod_show(mod_id: str):
     mod = CONF.mod.get_mod(mod_id)
     if mod is None:
-        return Response(ret=Ret.FAILED, detail='mod_id not exists')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail='mod_id not exists')
     return Response(mods=[mod])
 
 
@@ -43,7 +44,8 @@ async def mod_add(body: str = Body(None, media_type='text/plain'), mod_ids: List
     if body:
         ret = CONF.mod.add_by_content(body)
         if ret:
-            return Response(ret=Ret.FAILED, detail='invalid mod file content')
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail='invalid mod file content')
     if mod_ids:
         for mod_id in mod_ids:
             CONF.mod.add_by_mod_id(mod_id)

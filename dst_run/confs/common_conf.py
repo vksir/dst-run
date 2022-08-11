@@ -22,12 +22,6 @@ class CommonConf(BaseConf):
             'enable_caves': True,
             'version': version,
             'proxy': '',
-            'authenticate': {
-                'enable': True,
-                'host': '127.0.0.1',
-                'port': 12599,
-                'ip_whitelist': ['127.0.0.1'],
-            },
             'report': {
                 'host': '127.0.0.1',
                 'port': 5701,
@@ -42,22 +36,6 @@ class CommonConf(BaseConf):
     @property
     def uuid(self):
         return self['uuid']
-
-    @property
-    def authenticate_enable(self) -> bool:
-        return self['authenticate']['enable']
-
-    @property
-    def authenticate_host(self) -> str:
-        return self['authenticate']['host']
-
-    @property
-    def authenticate_port(self) -> int:
-        return self['authenticate']['port']
-
-    @property
-    def authenticate_ip_whitelist(self) -> List[str]:
-        return self['authenticate']['ip_whitelist']
 
     @property
     def enable_64bit(self) -> bool:

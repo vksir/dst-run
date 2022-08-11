@@ -1,3 +1,4 @@
+import enum
 from enum import Enum
 from pydantic import BaseModel
 
@@ -46,6 +47,17 @@ class Mod(BaseModel):
     version: str = None
     enable: bool = None
 
+
+class Status(enum.Enum):
+    INACTIVE = 'INACTIVE'
+    ACTIVE = 'ACTIVE'
+
+    STARTING = 'STARTING'
+    STOPPING = 'STOPPING'
+
+    UPDATING = 'UPDATING'
+    RESTARTING = 'RESTARTING'
+    REGENERATING = 'REGENERATING'
 
 
 

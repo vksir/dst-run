@@ -36,5 +36,5 @@ class MsgHandler(threading.Thread):
 
 
 MSG_QUEUE = MsgQueue()
-msg_handler = MsgHandler()
+msg_handler = MsgHandler(daemon=True)
 msg_handler.start()

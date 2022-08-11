@@ -31,7 +31,7 @@ class TestReporter(unittest.TestCase):
         msg, _ = self.test_obj._deal_with_raw_message(raw_message)
         self.assertEqual('全服宣告：hello world', msg)
 
-        raw_message = 'Starting master server'
+        raw_message = 'Shard server started'
         msg, _ = self.test_obj._deal_with_raw_message(raw_message)
         self.assertEqual('服务器启动成功', msg)
 

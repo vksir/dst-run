@@ -46,3 +46,21 @@ class FilePath:
     CAVES_MOD_SAVE_DIR = f'{CLUSTERS_DIR}/{CLUSTER_NAME}/Caves/save'
 
 
+class GameLog:
+    PLAYER_JOIN = '[Join Announcement]'
+    PLAYER_LEAVE = '[Leave Announcement]'
+    PLAYER_DEATH = '[Death Announcement]'
+    PLAYER_RESURRECT = '[Resurrect Announcement]'
+    PLAYER_SAY = '[Say]'
+    WORLD_ANNOUNCEMENT = '[Announcement]'
+    MASTER_ACTIVE = 'Shard server started'
+    CAVES_ACTIVE = 'secondary shard is now ready'
+    SERVER_PAUSE = 'Sim paused'
+    SERVER_INACTIVE = 'Shutting down'
+
+    @staticmethod
+    def dict():
+        return {k: v
+                for k, v in GameLog.__dict__.items()
+                if not k.startswith('_') and isinstance(v, str)}
+
