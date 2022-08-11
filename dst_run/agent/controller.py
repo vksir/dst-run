@@ -25,15 +25,16 @@ class Controller:
         if self._status is not None:
             return self._status
 
-        agent_status = {agent.name: agent.status for agent in self._agents.values()}
-        simple_agent_status = {k: v.value.lower for k, v in agent_status.items()}
-        log.debug(f'current status: {simple_agent_status}')
+        status_lst = [agent.status for agent in self._agents.values()]
+        status_info = {agent.name: agent.status.value.lower()
+                       for agent in self._agents.values()}
+        log.debug(f'current status: {status_info}')
 
-        if all(status == Status.INACTIVE for status in agent_status.values()):
+        if all(status == Status.INACTIVE for status in status_lst):
             return Status.INACTIVE
-        if Status.STOPPING in agent_status.values():
+        if Status.STOPPING in status_lst:
             return Status.STOPPING
-        if Status.STARTING in agent_status.values():
+        if Status.STARTING in status_lst:
             return Status.STARTING
 
         return Status.ACTIVE
