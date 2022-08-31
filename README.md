@@ -1,3 +1,13 @@
 # dst_run
 
-To start a don't starve together dedicated server.
+## Install
+
+```shell
+curl -OL https://raw.githubusercontent.com/vksir/dst-run/master/scripts/setup.sh && bash setup.sh install
+```
+
+## Run
+
+```shell
+systemctl start dstrun
+```

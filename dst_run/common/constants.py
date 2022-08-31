@@ -13,7 +13,7 @@ class Constants:
 
 
 class FilePath:
-    HOME = os.environ['HOME'] if platform.system() == 'Linux' else os.environ['USERPROFILE']
+    HOME = os.environ['HOME']
 
     CFG_DIR = f'{HOME}/.dst_run'
     CFG_PATH = f'{CFG_DIR}/cfg.yaml'
@@ -24,8 +24,8 @@ class FilePath:
     GAME_CAVES_LOG_PATH = f'{CFG_DIR}/caves.log'
     GAME_UPDATE_LOG_PATH = f'{CFG_DIR}/update.log'
 
-    PROGRAM_DIR = f'{HOME}/dst_run'
-    TEMPLATE_DIR = f'{PROGRAM_DIR}/cluster_template'
+    PROCESS_DIR = f'/etc/dst-run'
+    TEMPLATE_DIR = f'{PROCESS_DIR}/configs/cluster_template'
 
     STEAMCMD_DIR = f'{HOME}/steamcmd'
     DST_DIR = f'{HOME}/dst'
