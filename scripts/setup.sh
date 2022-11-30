@@ -4,7 +4,7 @@ action="${1}"
 
 ALLOWED_ACTION_ARGS=("run" "install" "uninstall" "upgrade")
 REPO_URL="https://github.com/vksir/dst-run.git"
-PROCESS_DIR="/etc/dst_run"
+PROCESS_DIR="/etc/dst-run"
 DST_RUN_CMD_PATH="${PROCESS_DIR}/scripts/setup.sh"
 DST_RUN_SERVICE_PATH="${PROCESS_DIR}/configs/dstrun.service"
 REQUIREMENTS_PATH="${PROCESS_DIR}/requirements.txt"
