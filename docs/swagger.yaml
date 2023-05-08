@@ -1,0 +1,304 @@
+definitions:
+  commonresp.Err:
+    properties:
+      detail:
+        type: string
+    type: object
+  commonresp.Ok:
+    type: object
+  gameresp.Event:
+    properties:
+      level:
+        type: string
+      msg:
+        type: string
+      time:
+        type: integer
+      type:
+        type: string
+    type: object
+  gameresp.Events:
+    properties:
+      events:
+        items:
+          $ref: '#/definitions/gameresp.Event'
+        type: array
+    type: object
+  gameresp.Players:
+    properties:
+      players:
+        items:
+          type: string
+        type: array
+    type: object
+  model.Mod:
+    properties:
+      enable:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+    required:
+    - enable
+    - id
+    - name
+    type: object
+  model.ServerConfig:
+    properties:
+      auto_create:
+        enum:
+        - 1
+        - 2
+        - 3
+        type: integer
+      difficulty:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        type: integer
+      max_players:
+        type: integer
+      password:
+        type: string
+      port:
+        maximum: 65535
+        minimum: 1
+        type: integer
+      seed:
+        type: string
+      world_name:
+        type: string
+    type: object
+  modreq.ModIds:
+    properties:
+      mod_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  modreq.Mods:
+    properties:
+      mods:
+        items:
+          $ref: '#/definitions/model.Mod'
+        type: array
+    type: object
+  modresp.Response:
+    properties:
+      mods:
+        items:
+          $ref: '#/definitions/model.Mod'
+        type: array
+    type: object
+  serverconfigreq.ServerConfig:
+    properties:
+      server_config:
+        $ref: '#/definitions/model.ServerConfig'
+    type: object
+  serverconfigresp.ServerConfig:
+    properties:
+      server_config:
+        $ref: '#/definitions/model.ServerConfig'
+    type: object
+info:
+  contact: {}
+  title: Terraria Run
+  version: "1.0"
+paths:
+  /control/{action}:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: '[ start | stop | restart ]'
+        in: path
+        name: action
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/commonresp.Ok'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/commonresp.Err'
+      summary: 服务器控制
+      tags:
+      - control
+  /game/events:
+    get:
+      consumes:
+      - application/json
+      description: 'Event Type: [ SERVER_ACTIVE ]'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gameresp.Events'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/commonresp.Err'
+      summary: 查看当前事件
+      tags:
+      - game
+  /game/players:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gameresp.Players'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/commonresp.Err'
+      summary: 查看当前玩家
+      tags:
+      - game
+  /mod:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/modreq.ModIds'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/commonresp.Ok'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/commonresp.Err'
+      summary: 删除 Mods
+      tags:
+      - mod
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/modresp.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/commonresp.Err'
+      summary: 查看 Mods
+      tags:
+      - mod
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/modreq.ModIds'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/commonresp.Ok'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/commonresp.Err'
+      summary: 添加 Mods
+      tags:
+      - mod
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/modreq.Mods'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/commonresp.Ok'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/commonresp.Err'
+      summary: 更新 Mods
+      tags:
+      - mod
+  /server_config:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serverconfigresp.ServerConfig'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/commonresp.Err'
+      summary: 查看 Server Config
+      tags:
+      - server_config
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/serverconfigreq.ServerConfig'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/commonresp.Ok'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/commonresp.Err'
+      summary: 更新 Server Config
+      tags:
+      - server_config
+swagger: "2.0"
