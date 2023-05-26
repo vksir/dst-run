@@ -1,8 +1,8 @@
 package mod
 
 import (
-	"dst-run/internal/common/config"
-	"dst-run/internal/common/model"
+	"dst-run/internal/comm/config"
+	"dst-run/internal/comm/model"
 	"dst-run/internal/server/model/common/commonresp"
 	"dst-run/internal/server/model/mod/modreq"
 	"dst-run/internal/server/model/mod/modresp"

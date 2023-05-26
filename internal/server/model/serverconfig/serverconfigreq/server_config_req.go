@@ -1,4 +1,4 @@
-package serverconfigresp
+package serverconfigreq
 
 import "dst-run/internal/comm/model"
 

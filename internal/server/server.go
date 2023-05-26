@@ -7,6 +7,7 @@ import (
 	"dst-run/internal/server/router/serverconfig"
 	"dst-run/internal/server/swagger"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 	"log"
 )
 
@@ -16,7 +17,7 @@ import (
 func Run() {
 	e := gin.Default()
 	loadRouters(e)
-	err := e.Run("0.0.0.0:5778")
+	err := e.Run(viper.GetString("ns.listen"))
 	if err != nil {
 		log.Panic(err)
 	}

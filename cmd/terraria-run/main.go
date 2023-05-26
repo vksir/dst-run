@@ -1,43 +1,36 @@
 package main
 
 import (
-	"dst-run/internal/common/config"
-	_ "dst-run/internal/common/config"
-	"dst-run/internal/common/logging"
-	_ "dst-run/internal/common/logging"
-	"dst-run/internal/server"
+	"context"
+	"dst-run/internal/adapter/tmodloader"
+	"dst-run/internal/comm"
+	"dst-run/internal/core"
+	"dst-run/internal/report"
+	"time"
 )
 
-var log = logging.SugaredLogger()
+var log = comm.SugaredLogger()
 
 func main() {
-	log.Info("Start terraria run")
-	config.Read()
+	log.Info("start neutron star")
+	//config.Read()
+	err := report.R.Start(context.Background())
+	if err != nil {
+		panic(err)
+	}
 
-	//a
-	//:= agent.NewAgent("")
-	//err := a.Start()
+	//a := core.NewAgent(dontstarvetogether.NewAgentAdapter())
+	//err = a.Start()
 	//if err != nil {
 	//	panic(err)
-	//}
-	//time.Sleep(10 * time.Second)
-	//err = a.Stop()
-	//if err != nil {
-	//	logging.Error("Stop agent failed", err)
 	//}
 
-	//serverConfigHandler := serverconfig.NewHandler()
-	//if err := serverConfigHandler.Deploy(); err != nil {
-	//	panic(err)
-	//}
-	//
-	//modHandler := mod.NewHandler()
-	//err := modHandler.Deploy()
-	//if err != nil {
-	//	panic(err)
-	//}
-	//if err := controller.Start(); err != nil {
-	//	panic(err)
-	//}
-	server.Run()
+	a := core.NewAgent(tmodloader.NewAgentAdapter())
+	err = a.Start()
+	if err != nil {
+		panic(err)
+	}
+
+	//server.Run()
+	time.Sleep(1000 * time.Second)
 }

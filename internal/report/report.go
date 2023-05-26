@@ -2,7 +2,7 @@ package report
 
 import (
 	"context"
-	"dst-run/internal/common/logging"
+	"dst-run/internal/comm"
 	"fmt"
 	"regexp"
 	"sync"
@@ -17,7 +17,7 @@ const (
 	reportSize = 32
 )
 
-var log = logging.SugaredLogger()
+var log = comm.SugaredLogger()
 var rawEvents = getEvents()
 var R = NewReport()
 
@@ -66,7 +66,7 @@ func (r *Report) Start(ctx context.Context) error {
 				return
 			case s := <-r.channel:
 				if e := parseEvent(s); e != nil {
-					r.ReportEvent(e)
+					r.CacheEvent(e)
 				}
 			}
 		}
@@ -83,7 +83,7 @@ func (r *Report) GetEvents() ([]*Event, error) {
 	return events, nil
 }
 
-func (r *Report) ReportEvent(e *Event) {
+func (r *Report) CacheEvent(e *Event) {
 	r.lock.Lock()
 	r.events = append(r.events, e)
 	if len(r.events) > reportSize {

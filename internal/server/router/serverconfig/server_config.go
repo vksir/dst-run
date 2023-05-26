@@ -1,7 +1,7 @@
 package serverconfig
 
 import (
-	"dst-run/internal/common/config"
+	"dst-run/internal/comm/config"
 	"dst-run/internal/server/model/common/commonresp"
 	"dst-run/internal/server/model/serverconfig/serverconfigreq"
 	"dst-run/internal/server/model/serverconfig/serverconfigresp"

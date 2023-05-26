@@ -1,7 +1,7 @@
 package modresp
 
 import (
-	"dst-run/internal/common/model"
+	"dst-run/internal/comm/model"
 )
 
 type Response struct {

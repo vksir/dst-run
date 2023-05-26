@@ -1,6 +1,6 @@
 package modreq
 
-import "dst-run/internal/common/model"
+import "dst-run/internal/comm/model"
 
 type ModIds struct {
 	ModIds []string `json:"mod_ids"`
