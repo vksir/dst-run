@@ -2,7 +2,7 @@ package game
 
 import (
 	"dst-run/internal/controller"
-	"dst-run/internal/report"
+	"dst-run/internal/core"
 	"dst-run/internal/server/model/common/commonresp"
 	"dst-run/internal/server/model/game/gameresp"
 	"fmt"
@@ -40,7 +40,7 @@ func getPlayers(c *gin.Context) {
 
 // getEvents godoc
 // @Summary			查看当前事件
-// @Description		Event Type: [ SERVER_ACTIVE ]
+// @Description		ReportEvent Type: [ SERVER_ACTIVE ]
 // @Tags			game
 // @Accept			json
 // @Produce			json
@@ -48,7 +48,7 @@ func getPlayers(c *gin.Context) {
 // @Failure			500 {object} commonresp.Err
 // @Router			/game/events [get]
 func getEvents(c *gin.Context) {
-	events, err := report.R.GetEvents()
+	events, err := core.R.GetEvents()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, commonresp.Err{Detail: err.Error()})
 		return

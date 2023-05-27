@@ -26,7 +26,7 @@ var NSLogPath = filepath.Join(LogDir, "neutron-star.log")
 var DBPath = filepath.Join(DataDir, "neutron-star.db")
 
 func initPath() {
-	if err := MakeDir(NSHome, ProgramDir, ResourceDir, ConfigDir, DataDir, LogDir); err != nil {
+	if err := MkDir(NSHome, ProgramDir, ResourceDir, ConfigDir, DataDir, LogDir); err != nil {
 		panic(err)
 	}
 }

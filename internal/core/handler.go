@@ -5,12 +5,16 @@ import (
 	"dst-run/internal/comm"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
+	"sync"
 	"sync/atomic"
+	"time"
 )
 
 const (
 	bufferSize = 128
+	reportSize = 64
 )
 
 type Handler interface {
@@ -130,4 +134,96 @@ func (c *Cut) StopCut() (string, error) {
 	content := strings.Join(c.cutContent, "\n")
 	log.Debug("Cut success: ", content)
 	return content, nil
+}
+
+type ReportPattern struct {
+	PatternString string // required
+	Format        string // required
+	Level         string // required
+	Type          string // optional
+	Pattern       *regexp.Regexp
+}
+
+type ReportEvent struct {
+	Time  int64
+	Msg   string
+	Level string
+	Type  string
+}
+
+type Report struct {
+	Name    string
+	channel chan *string
+
+	patterns []*ReportPattern
+	lock     *sync.Mutex
+	events   []*ReportEvent
+}
+
+func NewReport(name string, patterns []*ReportPattern) *Report {
+	r := Report{
+		Name:     name,
+		lock:     &sync.Mutex{},
+		channel:  make(chan *string, bufferSize),
+		patterns: patterns,
+	}
+	return &r
+}
+
+func (r *Report) Channel() chan *string {
+	return r.channel
+}
+
+func (r *Report) Start(ctx context.Context) error {
+	log.Info("begin output report")
+	go func() {
+		for {
+			select {
+			case s := <-r.channel:
+				if e := r.parseEvent(s); e != nil {
+					r.CacheEvent(e)
+				}
+			}
+		}
+	}()
+	return nil
+}
+
+func (r *Report) GetEvents() ([]*ReportEvent, error) {
+	r.lock.Lock()
+	events := make([]*ReportEvent, len(r.events))
+	copy(events, r.events)
+	r.lock.Unlock()
+	return events, nil
+}
+
+func (r *Report) CacheEvent(e *ReportEvent) {
+	r.lock.Lock()
+	r.events = append(r.events, e)
+	if len(r.events) > reportSize {
+		r.events = r.events[len(r.events)-reportSize:]
+	}
+	r.lock.Unlock()
+	log.Infof("report event: %+v", *e)
+}
+
+// parseEvent 传入 Process 输出，根据预定义事件规则，从中解析事件
+func (r *Report) parseEvent(s *string) *ReportEvent {
+	for i := range r.patterns {
+		if res := r.patterns[i].Pattern.FindStringSubmatch(*s); res != nil {
+			var args []any
+			res = res[1:]
+			for i := range res {
+				args = append(args, res[i])
+			}
+			e := ReportEvent{
+				Level: r.patterns[i].Level,
+				Time:  time.Now().Unix(),
+				Msg:   fmt.Sprintf(r.patterns[i].Format, args...),
+				Type:  r.patterns[i].Type,
+			}
+			return &e
+		}
+	}
+	return nil
 }

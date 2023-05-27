@@ -66,7 +66,7 @@ func getModsFromDB() (map[string]*Mod, error) {
 }
 
 func init() {
-	if err := comm.MakeDir(dataDir, customTemplateDir); err != nil {
+	if err := comm.MkDir(dataDir, customTemplateDir); err != nil {
 		panic(err)
 	}
 

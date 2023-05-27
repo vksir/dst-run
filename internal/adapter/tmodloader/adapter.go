@@ -18,6 +18,12 @@ import (
 	"time"
 )
 
+const (
+	EventTypeServerStatus = "SERVER_STATUS"
+)
+
+var R = core.NewReport("Tmod", getEvents())
+
 type AgentAdapter struct {
 	processes      []*core.Process
 	recordHandlers []*core.Record
@@ -43,6 +49,7 @@ func (a *AgentAdapter) Start() error {
 
 	p.RegisterHandler(rh)
 	p.RegisterHandler(ch)
+	p.RegisterHandler(R)
 	if err := p.Start(); err != nil {
 		return err
 	}
@@ -82,6 +89,12 @@ func (a *AgentAdapter) Install() error {
 	if err != nil {
 		return err
 	}
+
+	R.CacheEvent(&core.ReportEvent{
+		Time:  time.Now().Unix(),
+		Msg:   "正在安装服务器",
+		Level: "warning",
+	})
 	return installProgram(latestTag)
 }
 
@@ -101,6 +114,12 @@ func (a *AgentAdapter) Update() error {
 			}
 		}
 	}
+
+	R.CacheEvent(&core.ReportEvent{
+		Time:  time.Now().Unix(),
+		Msg:   "正在更新服务器",
+		Level: "warning",
+	})
 	return installProgram(latestTag)
 }
 
@@ -145,10 +164,7 @@ func (a *AgentAdapter) RunCmd(index int, cmd string) (string, error) {
 }
 
 func installProgram(tag string) error {
-	if err := comm.RemoveFile(programDir); err != nil {
-		return err
-	}
-	if err := comm.MakeDir(programDir); err != nil {
+	if err := comm.ClearDir(programDir); err != nil {
 		return err
 	}
 
@@ -231,7 +247,21 @@ func deployServerConfig() error {
 }
 
 func deployMod() error {
+	if err := comm.ClearDir(modDir); err != nil {
+		return err
+	}
+
 	enableModIds := viper.GetStringSlice("tmodloader.mod_ids")
+	if len(enableModIds) == 0 {
+		return nil
+	}
+
+	R.CacheEvent(&core.ReportEvent{
+		Time:  time.Now().Unix(),
+		Msg:   "正在下载 Mod",
+		Level: "info",
+	})
+
 	if err := downloadMods(enableModIds); err != nil {
 		return err
 	}
@@ -245,10 +275,6 @@ func deployMod() error {
 }
 
 func downloadMods(enableModIds []string) error {
-	if len(enableModIds) == 0 {
-		return nil
-	}
-
 	cmd := exec.Command("steamcmd", "+login", "anonymous")
 	for _, id := range enableModIds {
 		cmd.Args = append(cmd.Args, "+workshop_download_item", "1281930", id)
@@ -270,12 +296,7 @@ func downloadMods(enableModIds []string) error {
 }
 
 func installMods(enableModIds []string) error {
-	if err := comm.RemoveFile(modDir); err != nil {
-		return err
-	}
-	if err := comm.MakeDir(modDir); err != nil {
-		return err
-	}
+
 	for _, id := range enableModIds {
 		if err := copyMod(id); err != nil {
 			return err
@@ -350,4 +371,38 @@ func enableMods(enableModIds []string) error {
 		return err
 	}
 	return comm.WriteFile(enableJson, bytes)
+}
+
+func getEvents() []*core.ReportPattern {
+	events := []*core.ReportPattern{
+		{
+			// Finding Mods...
+			PatternString: `Finding Mods`,
+			Format:        "正在加载 Mod",
+			Level:         "info",
+		},
+		{
+			// Creating world
+			PatternString: `Creating world`,
+			Format:        "正在生成世界",
+			Level:         "info",
+		},
+		{
+			// Loading world data: 1%
+			PatternString: `Loading world data: 1%`,
+			Format:        "正在加载世界",
+			Level:         "info",
+		},
+		{
+			// Server started
+			PatternString: `Server started`,
+			Format:        "服务器启动成功",
+			Level:         "warning",
+			Type:          EventTypeServerStatus,
+		},
+	}
+	for i := range events {
+		events[i].Pattern = regexp.MustCompile(events[i].PatternString)
+	}
+	return events
 }

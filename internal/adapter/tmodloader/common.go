@@ -71,14 +71,14 @@ func initData() {
 	}
 
 	if err := json.Unmarshal(dataBytes, &data); err != nil {
-		if err := comm.RemoveFile(dataPath); err != nil {
+		if err := comm.RmvPath(dataPath); err != nil {
 			panic(err)
 		}
 	}
 }
 
 func init() {
-	if err := comm.MakeDir(dataDir); err != nil {
+	if err := comm.MkDir(dataDir); err != nil {
 		panic(err)
 	}
 

@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
@@ -20,13 +21,19 @@ func CopyFile(src, dst string) error {
 	return RunCmd(cmd)
 }
 
-func RemoveFile(path string) error {
+func RmvPath(path string) error {
 	cmd := exec.Command("rm", "-rf", path)
 	return RunCmd(cmd)
 }
 
-func MakeDir(paths ...string) error {
+func MkDir(paths ...string) error {
 	cmd := exec.Command("mkdir", "-p", strings.Join(paths, " "))
+	return RunCmd(cmd)
+}
+
+func ClearDir(path string) error {
+	cmdString := fmt.Sprintf("rm -rf %s", filepath.Join(path, "*"))
+	cmd := exec.Command("bash", "-c", cmdString)
 	return RunCmd(cmd)
 }
 
