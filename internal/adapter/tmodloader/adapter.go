@@ -22,7 +22,8 @@ const (
 	EventTypeServerStatus = "SERVER_STATUS"
 )
 
-var R = core.NewReport("Tmod", getEvents())
+var R = core.NewReport("TMod", getReportPatterns())
+var Agent = core.NewAgent(NewAgentAdapter())
 
 type AgentAdapter struct {
 	processes      []*core.Process
@@ -34,6 +35,10 @@ func NewAgentAdapter() *AgentAdapter {
 	return &AgentAdapter{}
 }
 
+func (a *AgentAdapter) Name() string {
+	return "TMod"
+}
+
 func (a *AgentAdapter) Processes() []*core.Process {
 	return a.processes
 }
@@ -43,9 +48,9 @@ func (a *AgentAdapter) Start() error {
 	a.recordHandlers = []*core.Record{}
 	a.cutHandlers = []*core.Cut{}
 
-	p := core.NewProcess("Tmod", getStartCmd())
-	rh := core.NewRecord("Tmod", logPath)
-	ch := core.NewCut("Tmod")
+	p := core.NewProcess("TMod", getStartCmd())
+	rh := core.NewRecord("TMod", logPath)
+	ch := core.NewCut("TMod")
 
 	p.RegisterHandler(rh)
 	p.RegisterHandler(ch)
@@ -80,6 +85,13 @@ func (a *AgentAdapter) Stop() error {
 				}
 			}
 		}
+
+		R.CacheEvent(&core.ReportEvent{
+			Time:  time.Now().Unix(),
+			Msg:   "服务器已停止",
+			Level: "warning",
+			Type:  EventTypeServerStatus,
+		})
 	}()
 	return nil
 }
@@ -237,6 +249,7 @@ func deployServerConfig() error {
 		"seed":       viper.GetString("tmodloader.seed"),
 		"maxplayers": viper.GetString("tmodloader.max_players"),
 		"password":   viper.GetString("tmodloader.password"),
+		"port":       viper.GetString("tmodloader.port"),
 	}
 	for k, v := range m {
 		pattern := regexp.MustCompile(fmt.Sprintf(`(?m)^#%s=.*$`, k))
@@ -348,6 +361,7 @@ func getLatestModDir(id string) (string, error) {
 	return filepath.Join(modDir, s[len(s)-1].dirname), nil
 }
 
+// TODO: more simple
 type Sorter []struct {
 	dirname string
 	time    time.Time
@@ -373,11 +387,11 @@ func enableMods(enableModIds []string) error {
 	return comm.WriteFile(enableJson, bytes)
 }
 
-func getEvents() []*core.ReportPattern {
+func getReportPatterns() []*core.ReportPattern {
 	events := []*core.ReportPattern{
 		{
-			// Finding Mods...
-			PatternString: `Finding Mods`,
+			// Finding ModMap...
+			PatternString: `Finding ModMap`,
 			Format:        "正在加载 Mod",
 			Level:         "info",
 		},

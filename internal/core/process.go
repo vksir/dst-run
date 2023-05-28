@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var log = comm.SugaredLogger()
+var log = comm.GetSugaredLogger()
 
 type Process struct {
 	Name string
@@ -103,7 +103,11 @@ func (p *Process) loopHealthCheck() {
 	log.Infof("begin loop health check: %s", p.Name)
 	go func() {
 		err := p.Cmd.Wait()
-		log.Infof("exit loop health check: %s, %s", p.Name, err)
+		if err != nil {
+			log.Errorf("[%s] exit loop health check: %s", p.Name, err)
+		} else {
+			log.Infof("[%s] exit loop health check", p.Name)
+		}
 		p.stop()
 	}()
 }
@@ -111,7 +115,7 @@ func (p *Process) loopHealthCheck() {
 func (p *Process) loopOutput() {
 	log.Infof("begin loop output: %s", p.Name)
 	go func() {
-		defer log.Infof("exit loop output: %s", p.Name)
+		defer log.Infof("[%s] exit loop output", p.Name)
 
 		scanner := bufio.NewScanner(io.MultiReader(p.Stdout, p.Stderr))
 		for scanner.Scan() {

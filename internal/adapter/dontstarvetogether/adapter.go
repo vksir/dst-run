@@ -23,6 +23,10 @@ func NewAgentAdapter() *AgentAdapter {
 	return &AgentAdapter{}
 }
 
+func (a *AgentAdapter) Name() string {
+	return "DST"
+}
+
 func (a *AgentAdapter) Processes() []*core.Process {
 	return a.processes
 }

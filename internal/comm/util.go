@@ -7,10 +7,9 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
-	"strings"
 )
 
-var log = SugaredLogger()
+var log = GetSugaredLogger()
 
 func WriteFile(path string, content []byte) error {
 	return os.WriteFile(path, content, 0640)
@@ -27,7 +26,8 @@ func RmvPath(path string) error {
 }
 
 func MkDir(paths ...string) error {
-	cmd := exec.Command("mkdir", "-p", strings.Join(paths, " "))
+	args := append([]string{"-p"}, paths...)
+	cmd := exec.Command("mkdir", args...)
 	return RunCmd(cmd)
 }
 

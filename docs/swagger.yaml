@@ -1,12 +1,14 @@
 definitions:
-  commonresp.Err:
+  comm.RespErr:
     properties:
+      code:
+        type: integer
       detail:
         type: string
     type: object
-  commonresp.Ok:
+  comm.RespOk:
     type: object
-  gameresp.Event:
+  core.ReportEvent:
     properties:
       level:
         type: string
@@ -17,34 +19,24 @@ definitions:
       type:
         type: string
     type: object
-  gameresp.Events:
+  tmodloader.Mod:
     properties:
-      events:
-        items:
-          $ref: '#/definitions/gameresp.Event'
-        type: array
-    type: object
-  gameresp.Players:
-    properties:
-      players:
-        items:
-          type: string
-        type: array
-    type: object
-  model.Mod:
-    properties:
-      enable:
-        type: boolean
+      config:
+        type: string
       id:
         type: string
       name:
         type: string
+      remark:
+        type: string
     required:
-    - enable
     - id
-    - name
     type: object
-  model.ServerConfig:
+  tmodloader.ModMap:
+    additionalProperties:
+      $ref: '#/definitions/tmodloader.Mod'
+    type: object
+  tmodloader.ServerConfig:
     properties:
       auto_create:
         enum:
@@ -72,48 +64,17 @@ definitions:
       world_name:
         type: string
     type: object
-  modreq.ModIds:
-    properties:
-      mod_ids:
-        items:
-          type: string
-        type: array
-    type: object
-  modreq.Mods:
-    properties:
-      mods:
-        items:
-          $ref: '#/definitions/model.Mod'
-        type: array
-    type: object
-  modresp.Response:
-    properties:
-      mods:
-        items:
-          $ref: '#/definitions/model.Mod'
-        type: array
-    type: object
-  serverconfigreq.ServerConfig:
-    properties:
-      server_config:
-        $ref: '#/definitions/model.ServerConfig'
-    type: object
-  serverconfigresp.ServerConfig:
-    properties:
-      server_config:
-        $ref: '#/definitions/model.ServerConfig'
-    type: object
 info:
   contact: {}
   title: Terraria Run
   version: "1.0"
 paths:
-  /control/{action}:
+  /tmodloader/control/{action}:
     post:
       consumes:
       - application/json
       parameters:
-      - description: '[ start | stop | restart ]'
+      - description: '[ start | stop | restart | update | install ]'
         in: path
         name: action
         required: true
@@ -124,52 +85,36 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/commonresp.Ok'
+            $ref: '#/definitions/comm.RespOk'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/commonresp.Err'
+            $ref: '#/definitions/comm.RespErr'
       summary: 服务器控制
       tags:
-      - control
-  /game/events:
+      - tmodloader
+  /tmodloader/events:
     get:
       consumes:
       - application/json
-      description: 'Event Type: [ SERVER_ACTIVE ]'
+      description: 'ReportEvent Type: [ SERVER_ACTIVE ]'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/gameresp.Events'
+            items:
+              $ref: '#/definitions/core.ReportEvent'
+            type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/commonresp.Err'
-      summary: 查看当前事件
+            $ref: '#/definitions/comm.RespErr'
+      summary: 获取最近事件
       tags:
-      - game
-  /game/players:
-    get:
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/gameresp.Players'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/commonresp.Err'
-      summary: 查看当前玩家
-      tags:
-      - game
-  /mod:
+      - tmodloader
+  /tmodloader/mod:
     delete:
       consumes:
       - application/json
@@ -179,21 +124,23 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/modreq.ModIds'
+          items:
+            type: string
+          type: array
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/commonresp.Ok'
+            $ref: '#/definitions/comm.RespOk'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/commonresp.Err'
-      summary: 删除 Mods
+            $ref: '#/definitions/comm.RespErr'
+      summary: 删除 ModMap
       tags:
-      - mod
+      - tmodloader
     get:
       consumes:
       - application/json
@@ -203,14 +150,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/modresp.Response'
+            $ref: '#/definitions/tmodloader.ModMap'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/commonresp.Err'
-      summary: 查看 Mods
+            $ref: '#/definitions/comm.RespErr'
+      summary: 查看 ModMap
       tags:
-      - mod
+      - tmodloader
     post:
       consumes:
       - application/json
@@ -220,21 +167,21 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/modreq.ModIds'
+          $ref: '#/definitions/tmodloader.ModMap'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/commonresp.Ok'
+            $ref: '#/definitions/comm.RespOk'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/commonresp.Err'
-      summary: 添加 Mods
+            $ref: '#/definitions/comm.RespErr'
+      summary: 添加 ModMap
       tags:
-      - mod
+      - tmodloader
     put:
       consumes:
       - application/json
@@ -244,22 +191,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/modreq.Mods'
+          $ref: '#/definitions/tmodloader.ModMap'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/commonresp.Ok'
+            $ref: '#/definitions/comm.RespOk'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/commonresp.Err'
-      summary: 更新 Mods
+            $ref: '#/definitions/comm.RespErr'
+      summary: 更新 ModMap
       tags:
-      - mod
-  /server_config:
+      - tmodloader
+  /tmodloader/runtime/players:
     get:
       consumes:
       - application/json
@@ -269,14 +216,34 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/serverconfigresp.ServerConfig'
+            items:
+              type: string
+            type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/commonresp.Err'
-      summary: 查看 Server Config
+            $ref: '#/definitions/comm.RespErr'
+      summary: 获取当前玩家
       tags:
-      - server_config
+      - tmodloader
+  /tmodloader/server_config:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/tmodloader.ServerConfig'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/comm.RespErr'
+      summary: 获取 ServerConfig
+      tags:
+      - tmodloader
     put:
       consumes:
       - application/json
@@ -286,19 +253,19 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/serverconfigreq.ServerConfig'
+          $ref: '#/definitions/tmodloader.ServerConfig'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/commonresp.Ok'
+            $ref: '#/definitions/comm.RespOk'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/commonresp.Err'
-      summary: 更新 Server Config
+            $ref: '#/definitions/comm.RespErr'
+      summary: 更新 ServerConfig
       tags:
-      - server_config
+      - tmodloader
 swagger: "2.0"

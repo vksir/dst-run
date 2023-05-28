@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func SugaredLogger() *zap.SugaredLogger {
+func GetSugaredLogger() *zap.SugaredLogger {
 	return zap.S()
 }
 

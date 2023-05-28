@@ -12,7 +12,7 @@ const (
 	name = "tmodloader"
 )
 
-var log = comm.SugaredLogger()
+var log = comm.GetSugaredLogger()
 var db = comm.GetDB()
 var data = make(map[string]any)
 
@@ -33,23 +33,6 @@ func getStartCmd() *exec.Cmd {
 	cmd := exec.Command(dotnetPath, "tModLoader.dll", "-server", "-config", serverConfigPath)
 	cmd.Dir = filepath.Join(programDir)
 	return cmd
-}
-
-func getModsFromDB() (map[string]*Mod, error) {
-	rows, err := db.Query(`select * from t_tmodloader_mod`)
-	if err != nil {
-		return nil, err
-	}
-
-	mods := make(map[string]*Mod)
-	for rows.Next() {
-		var m Mod
-		if err := rows.Scan(&m.Id, &m.Name, &m.Remark, &m.Config); err != nil {
-			return nil, err
-		}
-		mods[m.Id] = &m
-	}
-	return mods, nil
 }
 
 func SaveData() error {
@@ -83,15 +66,5 @@ func init() {
 	}
 
 	initData()
-
-	sql := `create table if not exists t_tmodloader_mod
-(
-	id text primary key not null,
-	name text,
-	remark text,
-	config text
-)`
-	if _, err := db.Exec(sql); err != nil {
-		panic(err)
-	}
+	initDB()
 }

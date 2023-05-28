@@ -16,7 +16,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/control/{action}": {
+        "/tmodloader/control/{action}": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -25,13 +25,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "control"
+                    "tmodloader"
                 ],
                 "summary": "服务器控制",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "[ start | stop | restart ]",
+                        "description": "[ start | stop | restart | update | install ]",
                         "name": "action",
                         "in": "path",
                         "required": true
@@ -41,21 +41,21 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/commonresp.Ok"
+                            "$ref": "#/definitions/comm.RespOk"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/commonresp.Err"
+                            "$ref": "#/definitions/comm.RespErr"
                         }
                     }
                 }
             }
         },
-        "/game/events": {
+        "/tmodloader/events": {
             "get": {
-                "description": "Event Type: [ SERVER_ACTIVE ]",
+                "description": "ReportEvent Type: [ SERVER_ACTIVE ]",
                 "consumes": [
                     "application/json"
                 ],
@@ -63,54 +63,29 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "game"
+                    "tmodloader"
                 ],
-                "summary": "查看当前事件",
+                "summary": "获取最近事件",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/gameresp.Events"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.ReportEvent"
+                            }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/commonresp.Err"
+                            "$ref": "#/definitions/comm.RespErr"
                         }
                     }
                 }
             }
         },
-        "/game/players": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "game"
-                ],
-                "summary": "查看当前玩家",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/gameresp.Players"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/commonresp.Err"
-                        }
-                    }
-                }
-            }
-        },
-        "/mod": {
+        "/tmodloader/mod": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -119,20 +94,20 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "mod"
+                    "tmodloader"
                 ],
-                "summary": "查看 Mods",
+                "summary": "查看 ModMap",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/modresp.Response"
+                            "$ref": "#/definitions/tmodloader.ModMap"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/commonresp.Err"
+                            "$ref": "#/definitions/comm.RespErr"
                         }
                     }
                 }
@@ -145,9 +120,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "mod"
+                    "tmodloader"
                 ],
-                "summary": "更新 Mods",
+                "summary": "更新 ModMap",
                 "parameters": [
                     {
                         "description": "body",
@@ -155,7 +130,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/modreq.Mods"
+                            "$ref": "#/definitions/tmodloader.ModMap"
                         }
                     }
                 ],
@@ -163,13 +138,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/commonresp.Ok"
+                            "$ref": "#/definitions/comm.RespOk"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/commonresp.Err"
+                            "$ref": "#/definitions/comm.RespErr"
                         }
                     }
                 }
@@ -182,9 +157,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "mod"
+                    "tmodloader"
                 ],
-                "summary": "添加 Mods",
+                "summary": "添加 ModMap",
                 "parameters": [
                     {
                         "description": "body",
@@ -192,7 +167,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/modreq.ModIds"
+                            "$ref": "#/definitions/tmodloader.ModMap"
                         }
                     }
                 ],
@@ -200,13 +175,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/commonresp.Ok"
+                            "$ref": "#/definitions/comm.RespOk"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/commonresp.Err"
+                            "$ref": "#/definitions/comm.RespErr"
                         }
                     }
                 }
@@ -219,9 +194,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "mod"
+                    "tmodloader"
                 ],
-                "summary": "删除 Mods",
+                "summary": "删除 ModMap",
                 "parameters": [
                     {
                         "description": "body",
@@ -229,7 +204,10 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/modreq.ModIds"
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     }
                 ],
@@ -237,19 +215,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/commonresp.Ok"
+                            "$ref": "#/definitions/comm.RespOk"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/commonresp.Err"
+                            "$ref": "#/definitions/comm.RespErr"
                         }
                     }
                 }
             }
         },
-        "/server_config": {
+        "/tmodloader/runtime/players": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -258,20 +236,51 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "server_config"
+                    "tmodloader"
                 ],
-                "summary": "查看 Server Config",
+                "summary": "获取当前玩家",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/serverconfigresp.ServerConfig"
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/commonresp.Err"
+                            "$ref": "#/definitions/comm.RespErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/tmodloader/server_config": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader"
+                ],
+                "summary": "获取 ServerConfig",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/tmodloader.ServerConfig"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/comm.RespErr"
                         }
                     }
                 }
@@ -284,9 +293,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "server_config"
+                    "tmodloader"
                 ],
-                "summary": "更新 Server Config",
+                "summary": "更新 ServerConfig",
                 "parameters": [
                     {
                         "description": "body",
@@ -294,7 +303,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/serverconfigreq.ServerConfig"
+                            "$ref": "#/definitions/tmodloader.ServerConfig"
                         }
                     }
                 ],
@@ -302,13 +311,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/commonresp.Ok"
+                            "$ref": "#/definitions/comm.RespOk"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/commonresp.Err"
+                            "$ref": "#/definitions/comm.RespErr"
                         }
                     }
                 }
@@ -316,18 +325,21 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "commonresp.Err": {
+        "comm.RespErr": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "integer"
+                },
                 "detail": {
                     "type": "string"
                 }
             }
         },
-        "commonresp.Ok": {
+        "comm.RespOk": {
             "type": "object"
         },
-        "gameresp.Event": {
+        "core.ReportEvent": {
             "type": "object",
             "properties": {
                 "level": {
@@ -344,48 +356,33 @@ const docTemplate = `{
                 }
             }
         },
-        "gameresp.Events": {
-            "type": "object",
-            "properties": {
-                "events": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/gameresp.Event"
-                    }
-                }
-            }
-        },
-        "gameresp.Players": {
-            "type": "object",
-            "properties": {
-                "players": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "model.Mod": {
+        "tmodloader.Mod": {
             "type": "object",
             "required": [
-                "enable",
-                "id",
-                "name"
+                "id"
             ],
             "properties": {
-                "enable": {
-                    "type": "boolean"
+                "config": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
                 "name": {
                     "type": "string"
+                },
+                "remark": {
+                    "type": "string"
                 }
             }
         },
-        "model.ServerConfig": {
+        "tmodloader.ModMap": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/definitions/tmodloader.Mod"
+            }
+        },
+        "tmodloader.ServerConfig": {
             "type": "object",
             "properties": {
                 "auto_create": {
@@ -421,55 +418,6 @@ const docTemplate = `{
                 },
                 "world_name": {
                     "type": "string"
-                }
-            }
-        },
-        "modreq.ModIds": {
-            "type": "object",
-            "properties": {
-                "mod_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "modreq.Mods": {
-            "type": "object",
-            "properties": {
-                "mods": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Mod"
-                    }
-                }
-            }
-        },
-        "modresp.Response": {
-            "type": "object",
-            "properties": {
-                "mods": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Mod"
-                    }
-                }
-            }
-        },
-        "serverconfigreq.ServerConfig": {
-            "type": "object",
-            "properties": {
-                "server_config": {
-                    "$ref": "#/definitions/model.ServerConfig"
-                }
-            }
-        },
-        "serverconfigresp.ServerConfig": {
-            "type": "object",
-            "properties": {
-                "server_config": {
-                    "$ref": "#/definitions/model.ServerConfig"
                 }
             }
         }

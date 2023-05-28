@@ -1,22 +1,24 @@
 [ns]
 listen = "0.0.0.0:5800"
+proxy = ""
 
 [dontstarve]
 cluster_name = "Neutron Star"
 cluster_password = "6666"
 cluster_description = "Just Have Fun"
 game_mode = "endless"
-max_players = "6"
-pvp = "false"
+max_players = 6
+pvp = false
 admin_list = []
 cluster_token = ""
 mod_ids = []
 
 [tmodloader]
 world_name = "Neutron Star"
-auto_create = "3"
-difficulty = "2"
+auto_create = 3
+difficulty = 2
 seed = ""
 password = "6666"
-max_players = "8"
-port = "7777"
+max_players = 8
+port = 7777
+mod_ids = []

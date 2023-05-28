@@ -1,10 +1,7 @@
 package core
 
-import (
-	"fmt"
-)
-
 type AgentAdapter interface {
+	Name() string
 	Processes() []*Process
 	Start() error
 	Stop() error
@@ -36,7 +33,8 @@ func (a *Agent) Active() bool {
 
 func (a *Agent) Start() error {
 	if a.Active() {
-		return fmt.Errorf("agent active, no need start")
+		log.Infof("[%s] already running, no need start", a.Adapter.Name())
+		return nil
 	}
 
 	if err := a.Adapter.Config(); err != nil {
@@ -46,10 +44,6 @@ func (a *Agent) Start() error {
 }
 
 func (a *Agent) Stop() error {
-	if !a.Active() {
-		return fmt.Errorf("agent inactive, no need stop")
-	}
-
 	return a.Adapter.Stop()
 }
 

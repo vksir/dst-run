@@ -22,6 +22,8 @@ type Handler interface {
 	Start(context.Context) error
 }
 
+// TODO: Name() and log
+
 type Record struct {
 	Name       string
 	recordPath string
@@ -53,7 +55,7 @@ func (r *Record) Start(ctx context.Context) error {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Warn("exit record handler")
+				log.Warnf("[%s] exit record handler", r.Name)
 				return
 			case s := <-r.channel:
 				log.Debugf("[%s] %s", r.Name, *s)
@@ -144,6 +146,7 @@ type ReportPattern struct {
 	Pattern       *regexp.Regexp
 }
 
+type ReportEventList []*ReportEvent
 type ReportEvent struct {
 	Time  int64
 	Msg   string

@@ -12,7 +12,7 @@ const (
 	iconEye     = "󰀅"
 )
 
-var log = comm.SugaredLogger()
+var log = comm.GetSugaredLogger()
 var db = comm.GetDB()
 
 var programDir = filepath.Join(comm.ProgramDir, name)
