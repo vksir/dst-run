@@ -23,27 +23,27 @@ const (
 )
 
 var R = core.NewReport("TMod", getReportPatterns())
-var Agent = core.NewAgent(NewAgentAdapter())
+var Agent = core.NewAgent(NewAgentDriver())
 
-type AgentAdapter struct {
+type AgentDriver struct {
 	processes      []*core.Process
 	recordHandlers []*core.Record
 	cutHandlers    []*core.Cut
 }
 
-func NewAgentAdapter() *AgentAdapter {
-	return &AgentAdapter{}
+func NewAgentDriver() *AgentDriver {
+	return &AgentDriver{}
 }
 
-func (a *AgentAdapter) Name() string {
+func (a *AgentDriver) Name() string {
 	return "TMod"
 }
 
-func (a *AgentAdapter) Processes() []*core.Process {
+func (a *AgentDriver) Processes() []*core.Process {
 	return a.processes
 }
 
-func (a *AgentAdapter) Start() error {
+func (a *AgentDriver) Start() error {
 	a.processes = []*core.Process{}
 	a.recordHandlers = []*core.Record{}
 	a.cutHandlers = []*core.Cut{}
@@ -65,7 +65,7 @@ func (a *AgentAdapter) Start() error {
 	return nil
 }
 
-func (a *AgentAdapter) Stop() error {
+func (a *AgentDriver) Stop() error {
 	p := a.processes[0]
 
 	if _, err := p.Stdin.Write([]byte("exit\n")); err != nil {
@@ -96,7 +96,7 @@ func (a *AgentAdapter) Stop() error {
 	return nil
 }
 
-func (a *AgentAdapter) Install() error {
+func (a *AgentDriver) Install() error {
 	latestTag, err := github.GetLatestRelease("tModLoader", "tModLoader")
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func (a *AgentAdapter) Install() error {
 	return installProgram(latestTag)
 }
 
-func (a *AgentAdapter) Update() error {
+func (a *AgentDriver) Update() error {
 	latestTag, err := github.GetLatestRelease("tModLoader", "tModLoader")
 	if err != nil {
 		return err
@@ -135,7 +135,7 @@ func (a *AgentAdapter) Update() error {
 	return installProgram(latestTag)
 }
 
-func (a *AgentAdapter) Config() error {
+func (a *AgentDriver) Config() error {
 	if err := deployServerConfig(); err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (a *AgentAdapter) Config() error {
 	return nil
 }
 
-func (a *AgentAdapter) RunCmd(index int, cmd string) (string, error) {
+func (a *AgentDriver) RunCmd(index int, cmd string) (string, error) {
 	if index >= len(a.processes) {
 		return "", fmt.Errorf("invalid index: %d", index)
 	}

@@ -1,6 +1,6 @@
 package core
 
-type AgentAdapter interface {
+type AgentDriver interface {
 	Name() string
 	Processes() []*Process
 	Start() error
@@ -11,19 +11,19 @@ type AgentAdapter interface {
 }
 
 type Agent struct {
-	Adapter AgentAdapter
+	Driver AgentDriver
 }
 
-func NewAgent(a AgentAdapter) *Agent {
-	return &Agent{Adapter: a}
+func NewAgent(a AgentDriver) *Agent {
+	return &Agent{Driver: a}
 }
 
 func (a *Agent) Active() bool {
-	if len(a.Adapter.Processes()) == 0 {
+	if len(a.Driver.Processes()) == 0 {
 		return false
 	}
 
-	for _, p := range a.Adapter.Processes() {
+	for _, p := range a.Driver.Processes() {
 		if !p.Active() {
 			return false
 		}
@@ -33,18 +33,18 @@ func (a *Agent) Active() bool {
 
 func (a *Agent) Start() error {
 	if a.Active() {
-		log.Infof("[%s] already running, no need start", a.Adapter.Name())
+		log.Infof("[%s] already running, no need start", a.Driver.Name())
 		return nil
 	}
 
-	if err := a.Adapter.Config(); err != nil {
+	if err := a.Driver.Config(); err != nil {
 		return err
 	}
-	return a.Adapter.Start()
+	return a.Driver.Start()
 }
 
 func (a *Agent) Stop() error {
-	return a.Adapter.Stop()
+	return a.Driver.Stop()
 }
 
 func (a *Agent) Restart() error {
@@ -64,7 +64,7 @@ func (a *Agent) Update() error {
 			return err
 		}
 	}
-	if err := a.Adapter.Update(); err != nil {
+	if err := a.Driver.Update(); err != nil {
 		return err
 	}
 
@@ -82,5 +82,5 @@ func (a *Agent) Install() error {
 			return err
 		}
 	}
-	return a.Adapter.Install()
+	return a.Driver.Install()
 }

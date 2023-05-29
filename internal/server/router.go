@@ -2,7 +2,7 @@ package server
 
 import (
 	_ "dst-run/docs"
-	"dst-run/internal/adapter/tmodloader"
+	"dst-run/internal/driver/tmodloader"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"

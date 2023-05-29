@@ -13,25 +13,25 @@ import (
 	"time"
 )
 
-type AgentAdapter struct {
+type AgentDriver struct {
 	processes      []*core.Process
 	recordHandlers []*core.Record
 	cutHandlers    []*core.Cut
 }
 
-func NewAgentAdapter() *AgentAdapter {
-	return &AgentAdapter{}
+func NewAgentDriver() *AgentDriver {
+	return &AgentDriver{}
 }
 
-func (a *AgentAdapter) Name() string {
+func (a *AgentDriver) Name() string {
 	return "DST"
 }
 
-func (a *AgentAdapter) Processes() []*core.Process {
+func (a *AgentDriver) Processes() []*core.Process {
 	return a.processes
 }
 
-func (a *AgentAdapter) Start() error {
+func (a *AgentDriver) Start() error {
 	a.processes = []*core.Process{}
 	a.recordHandlers = []*core.Record{}
 	a.cutHandlers = []*core.Cut{}
@@ -54,7 +54,7 @@ func (a *AgentAdapter) Start() error {
 	return nil
 }
 
-func (a *AgentAdapter) Stop() error {
+func (a *AgentDriver) Stop() error {
 	for _, p := range a.processes {
 		if err := p.Stop(15 * time.Second); err != nil {
 			return err
@@ -63,7 +63,7 @@ func (a *AgentAdapter) Stop() error {
 	return nil
 }
 
-func (a *AgentAdapter) Install() error {
+func (a *AgentDriver) Install() error {
 	p := core.NewProcess("Steam", getInstallCmd())
 	rh := core.NewRecord("Steam", logPath)
 
@@ -78,11 +78,11 @@ func (a *AgentAdapter) Install() error {
 	}
 }
 
-func (a *AgentAdapter) Update() error {
+func (a *AgentDriver) Update() error {
 	return a.Install()
 }
 
-func (a *AgentAdapter) Config() error {
+func (a *AgentDriver) Config() error {
 	if err := createClusterIfNotExist(); err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (a *AgentAdapter) Config() error {
 	return nil
 }
 
-func (a *AgentAdapter) RunCmd(index int, cmd string) (string, error) {
+func (a *AgentDriver) RunCmd(index int, cmd string) (string, error) {
 	if index >= len(a.processes) {
 		return "", fmt.Errorf("invalid index: %d", index)
 	}

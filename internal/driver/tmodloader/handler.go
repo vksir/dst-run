@@ -218,7 +218,7 @@ func getPlayers(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, comm.NewRespErr("server not running"))
 	}
 
-	a := Agent.Adapter.(*AgentAdapter)
+	a := Agent.Driver.(*AgentDriver)
 	out, err := a.RunCmd(0, "playing")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, comm.NewRespErr(err))
