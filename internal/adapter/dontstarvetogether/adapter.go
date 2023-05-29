@@ -172,7 +172,7 @@ func deployClusterIni() error {
 }
 
 func deployMod() error {
-	enableModIds := viper.GetStringSlice("dontstarve.mod_ids")
+	enableModIds := viper.GetStringSlice("dontstarve.enable_mods")
 
 	mods, err := getModsFromDB()
 	if err != nil {

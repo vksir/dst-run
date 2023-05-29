@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-// @title           Terraria Run
+// @title           Neutron Star
 // @version         1.0
 
 func Run() {

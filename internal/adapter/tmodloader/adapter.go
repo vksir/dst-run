@@ -264,7 +264,7 @@ func deployMod() error {
 		return err
 	}
 
-	enableModIds := viper.GetStringSlice("tmodloader.mod_ids")
+	enableModIds := viper.GetStringSlice("tmodloader.enable_mods")
 	if len(enableModIds) == 0 {
 		return nil
 	}
@@ -336,46 +336,47 @@ func copyMod(id string) error {
 }
 
 func getLatestModDir(id string) (string, error) {
-	modDir := filepath.Join(steamModDir, id)
-	if _, err := os.Stat(modDir); os.IsNotExist(err) {
+	singleModDir := filepath.Join(steamModDir, id)
+	if _, err := os.Stat(singleModDir); os.IsNotExist(err) {
 		return "", err
 	}
-	files, err := os.ReadDir(modDir)
+
+	files, err := os.ReadDir(singleModDir)
 	if err != nil {
 		return "", err
 	}
-	var s Sorter
+
+	var m []ModDateDir
 	for _, file := range files {
 		if file.IsDir() {
 			t, err := time.Parse("2006.2", file.Name())
 			if err != nil {
 				return "", err
 			}
-			s = append(s, Sorter{{
-				dirname: file.Name(),
-				time:    t,
-			}}...)
+			m = append(m, ModDateDir{file.Name(), t})
 		}
 	}
-	sort.Sort(s)
-	return filepath.Join(modDir, s[len(s)-1].dirname), nil
+
+	sort.Sort(ModDateDirList(m))
+	latestDirname := m[len(m)-1].dirname
+	return filepath.Join(singleModDir, latestDirname), nil
 }
 
-// TODO: more simple
-type Sorter []struct {
+type ModDateDirList []ModDateDir
+type ModDateDir struct {
 	dirname string
 	time    time.Time
 }
 
-func (s Sorter) Len() int {
+func (s ModDateDirList) Len() int {
 	return len(s)
 }
 
-func (s Sorter) Less(i, j int) bool {
+func (s ModDateDirList) Less(i, j int) bool {
 	return s[i].time.Unix() < s[j].time.Unix()
 }
 
-func (s Sorter) Swap(i, j int) {
+func (s ModDateDirList) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 

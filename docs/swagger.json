@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "title": "Terraria Run",
+        "title": "Neutron Star",
         "contact": {},
         "version": "1.0"
     },
@@ -86,7 +86,7 @@
                 "tags": [
                     "tmodloader"
                 ],
-                "summary": "查看 ModMap",
+                "summary": "查看 Mods",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -112,7 +112,7 @@
                 "tags": [
                     "tmodloader"
                 ],
-                "summary": "更新 ModMap",
+                "summary": "更新 Mods",
                 "parameters": [
                     {
                         "description": "body",
@@ -149,7 +149,7 @@
                 "tags": [
                     "tmodloader"
                 ],
-                "summary": "添加 ModMap",
+                "summary": "添加 Mods",
                 "parameters": [
                     {
                         "description": "body",
@@ -186,7 +186,7 @@
                 "tags": [
                     "tmodloader"
                 ],
-                "summary": "删除 ModMap",
+                "summary": "删除 Mods",
                 "parameters": [
                     {
                         "description": "body",
@@ -391,6 +391,12 @@
                         2,
                         3
                     ]
+                },
+                "enable_mods": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "max_players": {
                     "type": "integer"

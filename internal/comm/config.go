@@ -5,6 +5,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+func ViperGetStringSlice(key string) []string {
+	s := viper.GetStringSlice(key)
+	if s == nil {
+		s = make([]string, 0)
+	}
+	return s
+}
+
 func SaveConfig() {
 	if err := viper.WriteConfigAs(NSConfigPath); err != nil {
 		panic(err)

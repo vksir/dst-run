@@ -96,7 +96,7 @@ const docTemplate = `{
                 "tags": [
                     "tmodloader"
                 ],
-                "summary": "查看 ModMap",
+                "summary": "查看 Mods",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -122,7 +122,7 @@ const docTemplate = `{
                 "tags": [
                     "tmodloader"
                 ],
-                "summary": "更新 ModMap",
+                "summary": "更新 Mods",
                 "parameters": [
                     {
                         "description": "body",
@@ -159,7 +159,7 @@ const docTemplate = `{
                 "tags": [
                     "tmodloader"
                 ],
-                "summary": "添加 ModMap",
+                "summary": "添加 Mods",
                 "parameters": [
                     {
                         "description": "body",
@@ -196,7 +196,7 @@ const docTemplate = `{
                 "tags": [
                     "tmodloader"
                 ],
-                "summary": "删除 ModMap",
+                "summary": "删除 Mods",
                 "parameters": [
                     {
                         "description": "body",
@@ -402,6 +402,12 @@ const docTemplate = `{
                         3
                     ]
                 },
+                "enable_mods": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "max_players": {
                     "type": "integer"
                 },
@@ -430,7 +436,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Terraria Run",
+	Title:            "Neutron Star",
 	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

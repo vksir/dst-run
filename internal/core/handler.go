@@ -22,21 +22,23 @@ type Handler interface {
 	Start(context.Context) error
 }
 
-// TODO: Name() and log
-
 type Record struct {
-	Name       string
+	name       string
 	recordPath string
 	channel    chan *string
 }
 
 func NewRecord(name, recordPath string) *Record {
 	r := Record{
-		Name:       name,
+		name:       name,
 		recordPath: recordPath,
 		channel:    make(chan *string, bufferSize),
 	}
 	return &r
+}
+
+func (r *Record) Name() string {
+	return r.name
 }
 
 func (r *Record) Channel() chan *string {
@@ -49,19 +51,19 @@ func (r *Record) Start(ctx context.Context) error {
 		return err
 	}
 
-	log.Info("begin record handler")
+	log.Infof("[%s] begin record handler", r.name)
 	go func() {
 		defer comm.Close(w)
 		for {
 			select {
 			case <-ctx.Done():
-				log.Warnf("[%s] exit record handler", r.Name)
+				log.Warnf("[%s] exit record handler", r.name)
 				return
 			case s := <-r.channel:
-				log.Debugf("[%s] %s", r.Name, *s)
-				_, err = w.Write([]byte(fmt.Sprintf("[%s] %s\n", r.Name, *s)))
+				log.Debugf("[%s] %s", r.name, *s)
+				_, err = w.Write([]byte(fmt.Sprintf("[%s] %s\n", r.name, *s)))
 				if err != nil {
-					log.Error("write record failed: ", err)
+					log.Errorf("[%s] write record failed: %s", r.name, err)
 				}
 			}
 		}
@@ -69,28 +71,24 @@ func (r *Record) Start(ctx context.Context) error {
 	return nil
 }
 
-// Cut TODO: more simple
 type Cut struct {
-	Name       string
-	ready      *atomic.Bool
-	flag       *atomic.Bool
+	name       string
 	channel    chan *string
+	flag       *atomic.Bool
 	cutContent []string
 }
 
 func NewCut(name string) *Cut {
 	c := Cut{
-		Name:    name,
-		ready:   &atomic.Bool{},
-		flag:    &atomic.Bool{},
+		name:    name,
 		channel: make(chan *string, bufferSize),
+		flag:    &atomic.Bool{},
 	}
-	c.flag.Store(false)
 	return &c
 }
 
-func (c *Cut) Ready() bool {
-	return c.ready.Load()
+func (c *Cut) Name() string {
+	return c.name
 }
 
 func (c *Cut) Channel() chan *string {
@@ -98,13 +96,13 @@ func (c *Cut) Channel() chan *string {
 }
 
 func (c *Cut) Start(ctx context.Context) error {
-	log.Info("Begin output cut")
+	log.Infof("[%s] begin output cut", c.name)
+
 	go func() {
-		defer c.ready.Store(false)
 		for {
 			select {
 			case <-ctx.Done():
-				log.Warn("Output cut stopped")
+				log.Warnf("[%s] exit output cut", c.name)
 				return
 			case s := <-c.channel:
 				if c.flag.Load() {
@@ -113,16 +111,12 @@ func (c *Cut) Start(ctx context.Context) error {
 			}
 		}
 	}()
-	c.ready.Store(true)
 	return nil
 }
 
 func (c *Cut) BeginCut() error {
-	if !c.ready.Load() {
-		return fmt.Errorf("cut is not ready, begin cut failed")
-	}
 	if c.flag.Load() {
-		return fmt.Errorf("cutting now, begin cut failed")
+		return fmt.Errorf("[%s] cutting now, begin cut failed", c.name)
 	}
 	c.flag.Store(true)
 	return nil
@@ -130,11 +124,11 @@ func (c *Cut) BeginCut() error {
 
 func (c *Cut) StopCut() (string, error) {
 	if !c.flag.Load() {
-		return "", fmt.Errorf("not cutting, stop cut failed")
+		return "", fmt.Errorf("[%s] not cutting, stop cut failed", c.name)
 	}
 	c.flag.Store(false)
 	content := strings.Join(c.cutContent, "\n")
-	log.Debug("Cut success: ", content)
+	log.Debugf("[%s] cut success: %s", c.name, content)
 	return content, nil
 }
 
@@ -155,7 +149,7 @@ type ReportEvent struct {
 }
 
 type Report struct {
-	Name    string
+	name    string
 	channel chan *string
 
 	patterns []*ReportPattern
@@ -165,7 +159,7 @@ type Report struct {
 
 func NewReport(name string, patterns []*ReportPattern) *Report {
 	r := Report{
-		Name:     name,
+		name:     name,
 		lock:     &sync.Mutex{},
 		channel:  make(chan *string, bufferSize),
 		patterns: patterns,
@@ -173,12 +167,17 @@ func NewReport(name string, patterns []*ReportPattern) *Report {
 	return &r
 }
 
+func (r *Report) Name() string {
+	return r.name
+}
+
 func (r *Report) Channel() chan *string {
 	return r.channel
 }
 
-func (r *Report) Start(ctx context.Context) error {
-	log.Info("begin output report")
+func (r *Report) Start(_ context.Context) error {
+	log.Infof("[%s] begin output report", r.name)
+
 	go func() {
 		for {
 			select {
@@ -207,7 +206,7 @@ func (r *Report) CacheEvent(e *ReportEvent) {
 		r.events = r.events[len(r.events)-reportSize:]
 	}
 	r.lock.Unlock()
-	log.Infof("report event: %+v", *e)
+	log.Infof("[%s] report event: %+v", r.name, *e)
 }
 
 // parseEvent 传入 Process 输出，根据预定义事件规则，从中解析事件

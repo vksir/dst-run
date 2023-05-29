@@ -11,7 +11,7 @@ max_players = 6
 pvp = false
 admin_list = []
 cluster_token = ""
-mod_ids = []
+enable_mods = []
 
 [tmodloader]
 world_name = "Neutron Star"
@@ -21,4 +21,4 @@ seed = ""
 password = "6666"
 max_players = 8
 port = 7777
-mod_ids = []
+enable_mods = []

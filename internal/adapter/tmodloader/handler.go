@@ -88,10 +88,9 @@ func getServerConfig(c *gin.Context) {
 		MaxPlayers: viper.GetInt("tmodloader.max_players"),
 		Password:   viper.GetString("tmodloader.password"),
 		Port:       viper.GetInt("tmodloader.port"),
+		EnableMods: comm.ViperGetStringSlice("tmodloader.enable_mods"),
 	})
 }
-
-// TODO: enable mod
 
 // put godoc
 // @Summary			更新 ServerConfig
@@ -115,6 +114,7 @@ func updateServerConfig(c *gin.Context) {
 	viper.Set("tmodloader.max_players", s.MaxPlayers)
 	viper.Set("tmodloader.password", s.Password)
 	viper.Set("tmodloader.port", s.Port)
+	viper.Set("tmodloader.enable_mods", s.EnableMods)
 	comm.SaveConfig()
 	c.JSON(http.StatusOK, comm.NewRespOk())
 }

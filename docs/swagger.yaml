@@ -51,6 +51,10 @@ definitions:
         - 2
         - 3
         type: integer
+      enable_mods:
+        items:
+          type: string
+        type: array
       max_players:
         type: integer
       password:
@@ -66,7 +70,7 @@ definitions:
     type: object
 info:
   contact: {}
-  title: Terraria Run
+  title: Neutron Star
   version: "1.0"
 paths:
   /tmodloader/control/{action}:
@@ -138,7 +142,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/comm.RespErr'
-      summary: 删除 ModMap
+      summary: 删除 Mods
       tags:
       - tmodloader
     get:
@@ -155,7 +159,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/comm.RespErr'
-      summary: 查看 ModMap
+      summary: 查看 Mods
       tags:
       - tmodloader
     post:
@@ -179,7 +183,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/comm.RespErr'
-      summary: 添加 ModMap
+      summary: 添加 Mods
       tags:
       - tmodloader
     put:
@@ -203,7 +207,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/comm.RespErr'
-      summary: 更新 ModMap
+      summary: 更新 Mods
       tags:
       - tmodloader
   /tmodloader/runtime/players:
