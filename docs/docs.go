@@ -125,6 +125,12 @@ const docTemplate = `{
                 "summary": "更新 Mods",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "[ true | false ]",
+                        "name": "update_mod_info",
+                        "in": "query"
+                    },
+                    {
                         "description": "body",
                         "name": "body",
                         "in": "body",
@@ -208,6 +214,45 @@ const docTemplate = `{
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/comm.RespOk"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/comm.RespErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/tmodloader/mod/mod_id": {
+            "post": {
+                "consumes": [
+                    "text/plain"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader"
+                ],
+                "summary": "通过 Mod ID 添加 Mods",
+                "parameters": [
+                    {
+                        "description": "多个 Mod ID 一行一个",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],

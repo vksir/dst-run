@@ -2,10 +2,13 @@ package tmodloader
 
 import (
 	"dst-run/internal/comm"
+	"dst-run/thirdparty/steam"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	"io"
 	"net/http"
+	"strings"
 )
 
 func LoadRouters(g *gin.RouterGroup) {
@@ -18,6 +21,7 @@ func LoadRouters(g *gin.RouterGroup) {
 
 	g.GET("/mod", getMods)
 	g.POST("/mod", addMods)
+	g.POST("/mod/mod_id", addModsFromId)
 	g.DELETE("/mod", delMods)
 	g.PUT("/mod", updateMods)
 
@@ -71,7 +75,7 @@ func control(c *gin.Context) {
 	c.JSON(http.StatusOK, comm.NewRespOk())
 }
 
-// get godoc
+// getServerConfig godoc
 // @Summary			获取 ServerConfig
 // @Tags			tmodloader
 // @Accept			json
@@ -92,7 +96,7 @@ func getServerConfig(c *gin.Context) {
 	})
 }
 
-// put godoc
+// updateServerConfig godoc
 // @Summary			更新 ServerConfig
 // @Tags			tmodloader
 // @Accept			json
@@ -119,7 +123,7 @@ func updateServerConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, comm.NewRespOk())
 }
 
-// get godoc
+// getMods godoc
 // @Summary			查看 Mods
 // @Tags			tmodloader
 // @Accept			json
@@ -136,7 +140,7 @@ func getMods(c *gin.Context) {
 	c.JSON(http.StatusOK, mods)
 }
 
-// post godoc
+// addMods godoc
 // @Summary			添加 Mods
 // @Tags			tmodloader
 // @Accept			json
@@ -152,6 +156,16 @@ func addMods(c *gin.Context) {
 		return
 	}
 
+	var modIds []string
+	for id := range mods {
+		modIds = append(modIds, id)
+	}
+	if wl, err := steam.GetWorkShopItemInfos(modIds); err == nil {
+		for _, w := range wl {
+			mods[w.Id].Name = w.Name
+		}
+	}
+
 	if err := addModsInDB(mods); err != nil {
 		c.JSON(http.StatusBadRequest, comm.NewRespErr(err))
 		return
@@ -159,7 +173,49 @@ func addMods(c *gin.Context) {
 	c.JSON(http.StatusOK, comm.NewRespOk())
 }
 
-// del godoc
+// addModsFromId godoc
+// @Summary			通过 Mod ID 添加 Mods
+// @Tags			tmodloader
+// @Accept			plain
+// @Produce			json
+// @Param			body body string true "多个 Mod ID 一行一个"
+// @Success			200 {object} comm.RespOk
+// @Failure			500 {object} comm.RespErr
+// @Router			/tmodloader/mod/mod_id [post]
+func addModsFromId(c *gin.Context) {
+	bytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, comm.NewRespErr(err))
+		return
+	}
+
+	var modIds []string
+	rawModIds := strings.Split(string(bytes), "\n")
+	for _, id := range rawModIds {
+		if id != "" {
+			modIds = append(modIds, id)
+		}
+	}
+
+	mods := make(map[string]*Mod)
+	for _, id := range rawModIds {
+		mods[id] = &Mod{Id: id}
+	}
+
+	if wl, err := steam.GetWorkShopItemInfos(modIds); err == nil {
+		for _, w := range wl {
+			mods[w.Id].Name = w.Name
+		}
+	}
+
+	if err := addModsInDB(mods); err != nil {
+		c.JSON(http.StatusBadRequest, comm.NewRespErr(err))
+		return
+	}
+	c.JSON(http.StatusOK, comm.NewRespOk())
+}
+
+// delMods godoc
 // @Summary			删除 Mods
 // @Tags			tmodloader
 // @Accept			json
@@ -182,11 +238,12 @@ func delMods(c *gin.Context) {
 	c.JSON(http.StatusOK, comm.NewRespOk())
 }
 
-// put godoc
+// updateMods godoc
 // @Summary			更新 Mods
 // @Tags			tmodloader
 // @Accept			json
 // @Produce			json
+// @Param   		update_mod_info query string false "[ true | false ]"
 // @Param			body body ModMap true "body"
 // @Success			200 {object} comm.RespOk
 // @Failure			500 {object} comm.RespErr
@@ -196,6 +253,19 @@ func updateMods(c *gin.Context) {
 	if err := c.ShouldBindJSON(&mods); err != nil {
 		c.JSON(http.StatusBadRequest, comm.NewRespErr(err))
 		return
+	}
+
+	updateModInfo := c.Query("update_mod_info")
+	if updateModInfo == "true" {
+		var modIds []string
+		for id := range mods {
+			modIds = append(modIds, id)
+		}
+		if wl, err := steam.GetWorkShopItemInfos(modIds); err == nil {
+			for _, w := range wl {
+				mods[w.Id].Name = w.Name
+			}
+		}
 	}
 
 	if err := updateModsInDB(mods); err != nil {

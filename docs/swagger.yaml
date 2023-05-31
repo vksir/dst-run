@@ -190,6 +190,10 @@ paths:
       consumes:
       - application/json
       parameters:
+      - description: '[ true | false ]'
+        in: query
+        name: update_mod_info
+        type: string
       - description: body
         in: body
         name: body
@@ -208,6 +212,31 @@ paths:
           schema:
             $ref: '#/definitions/comm.RespErr'
       summary: 更新 Mods
+      tags:
+      - tmodloader
+  /tmodloader/mod/mod_id:
+    post:
+      consumes:
+      - text/plain
+      parameters:
+      - description: 多个 Mod ID 一行一个
+        in: body
+        name: body
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/comm.RespOk'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/comm.RespErr'
+      summary: 通过 Mod ID 添加 Mods
       tags:
       - tmodloader
   /tmodloader/runtime/players:

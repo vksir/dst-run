@@ -155,6 +155,9 @@ type Report struct {
 	patterns []*ReportPattern
 	lock     *sync.Mutex
 	events   []*ReportEvent
+
+	weLock     *sync.Mutex
+	weChannels []chan *ReportEvent
 }
 
 func NewReport(name string, patterns []*ReportPattern) *Report {
@@ -163,6 +166,8 @@ func NewReport(name string, patterns []*ReportPattern) *Report {
 		lock:     &sync.Mutex{},
 		channel:  make(chan *string, bufferSize),
 		patterns: patterns,
+
+		weLock: &sync.Mutex{},
 	}
 	return &r
 }
@@ -184,6 +189,8 @@ func (r *Report) Start(_ context.Context) error {
 			case s := <-r.channel:
 				if e := r.parseEvent(s); e != nil {
 					r.CacheEvent(e)
+					r.putInfoWaitEventChan(e)
+
 				}
 			}
 		}
@@ -207,6 +214,36 @@ func (r *Report) CacheEvent(e *ReportEvent) {
 	}
 	r.lock.Unlock()
 	log.Infof("[%s] report event: %+v", r.name, *e)
+}
+
+func (r *Report) WaitEvent(ctx context.Context, eventType string) {
+	c := make(chan *ReportEvent, reportSize)
+
+	r.weLock.Lock()
+	r.weChannels = append(r.weChannels, c)
+	r.weLock.Unlock()
+
+continueSelect:
+	select {
+	case e := <-c:
+		if e.Type != eventType {
+			goto continueSelect
+		}
+	case <-ctx.Done():
+	}
+
+	r.weLock.Lock()
+	r.weChannels, _ = comm.List[chan *ReportEvent](r.weChannels).Remove(c)
+	r.weLock.Unlock()
+}
+
+func (r *Report) putInfoWaitEventChan(e *ReportEvent) {
+	r.weLock.Lock()
+	defer r.weLock.Unlock()
+
+	for _, c := range r.weChannels {
+		c <- e
+	}
 }
 
 // parseEvent 传入 Process 输出，根据预定义事件规则，从中解析事件

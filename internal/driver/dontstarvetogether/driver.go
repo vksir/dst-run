@@ -1,6 +1,7 @@
 package dontstarvetogether
 
 import (
+	"context"
 	"dst-run/internal/comm"
 	"dst-run/internal/core"
 	"fmt"
@@ -55,9 +56,29 @@ func (a *AgentDriver) Start() error {
 }
 
 func (a *AgentDriver) Stop() error {
+	log.Infof("[%s] begin stop process: ", a.Name())
 	for _, p := range a.processes {
-		if err := p.Stop(15 * time.Second); err != nil {
-			return err
+		if err := p.Cmd.Process.Signal(os.Interrupt); err != nil {
+			return comm.NewErr(err)
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	defer cancel()
+
+	for _, p := range a.processes {
+		select {
+		case <-p.Ctx.Done():
+		case <-ctx.Done():
+		}
+	}
+
+	if err := ctx.Err(); err == context.DeadlineExceeded {
+		log.Infof("[%s] stop process timeout, begin kill", a.Name())
+		for _, p := range a.processes {
+			if err := p.Cmd.Process.Signal(os.Kill); err != nil {
+				return comm.NewErr(err)
+			}
 		}
 	}
 	return nil

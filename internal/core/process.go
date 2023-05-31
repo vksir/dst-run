@@ -5,10 +5,8 @@ import (
 	"context"
 	"dst-run/internal/comm"
 	"io"
-	"os"
 	"os/exec"
 	"strings"
-	"time"
 )
 
 var log = comm.GetSugaredLogger()
@@ -72,35 +70,12 @@ func (p *Process) Start() error {
 	return nil
 }
 
-func (p *Process) Stop(timeout time.Duration) error {
-	log.Infof("begin stop process: %s", p.Name)
-	if err := p.Cmd.Process.Signal(os.Interrupt); err != nil {
-		return err
-	}
-
-	go func() {
-		ctx, cancel := context.WithTimeout(p.Ctx, timeout)
-		defer cancel()
-
-		select {
-		case <-ctx.Done():
-			if err := ctx.Err(); err == context.DeadlineExceeded {
-				log.Errorf("process exit timeout, begin kill: %s", err)
-				if err := p.Cmd.Process.Kill(); err != nil {
-					log.Errorf("process kill failed: %s", err)
-				}
-			}
-		}
-	}()
-	return nil
-}
-
 func (p *Process) RegisterHandler(h Handler) {
 	p.handlers = append(p.handlers, h)
 }
 
 func (p *Process) loopHealthCheck() {
-	log.Infof("begin loop health check: %s", p.Name)
+	log.Infof("[%s] begin loop health check", p.Name)
 	go func() {
 		err := p.Cmd.Wait()
 		if err != nil {

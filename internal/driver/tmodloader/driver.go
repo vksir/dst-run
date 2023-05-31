@@ -13,13 +13,12 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 )
 
 const (
-	EventTypeServerStatus = "SERVER_STATUS"
+	EventTypeServerActive = "SERVER_ACTIVE"
 )
 
 var R = core.NewReport("TMod", getReportPatterns())
@@ -62,6 +61,9 @@ func (a *AgentDriver) Start() error {
 	a.processes = append(a.processes, p)
 	a.recordHandlers = append(a.recordHandlers, rh)
 	a.cutHandlers = append(a.cutHandlers, ch)
+
+	R.WaitEvent(context.Background(), EventTypeServerActive)
+	log.Infof("[%s] start complete", a.Name())
 	return nil
 }
 
@@ -72,27 +74,26 @@ func (a *AgentDriver) Stop() error {
 		log.Error("process write exit failed: ", err)
 	}
 
-	go func() {
-		ctx, cancel := context.WithTimeout(p.Ctx, 15*time.Second)
-		defer cancel()
+	ctx, cancel := context.WithTimeout(p.Ctx, 15*time.Second)
+	defer cancel()
 
-		select {
-		case <-ctx.Done():
-			if err := ctx.Err(); err == context.DeadlineExceeded {
-				log.Errorf("process exit timeout, begin kill: %s", err)
-				if err := p.Stop(0); err != nil {
-					log.Errorf("process kill failed: %s", err)
-				}
-			}
+	select {
+	case <-ctx.Done():
+	}
+
+	if err := ctx.Err(); err == context.DeadlineExceeded {
+		log.Errorf("process exit timeout, begin kill: %s", err)
+		if err := p.Cmd.Process.Signal(os.Kill); err != nil {
+			log.Errorf("process kill failed: %s", err)
 		}
+	}
 
-		R.CacheEvent(&core.ReportEvent{
-			Time:  time.Now().Unix(),
-			Msg:   "服务器已停止",
-			Level: "warning",
-			Type:  EventTypeServerStatus,
-		})
-	}()
+	R.CacheEvent(&core.ReportEvent{
+		Time:  time.Now().Unix(),
+		Msg:   "服务器已停止",
+		Level: "warning",
+		Type:  EventTypeServerActive,
+	})
 	return nil
 }
 
@@ -218,6 +219,11 @@ func installDotnet() error {
 
 	cmd = exec.Command("bash", filepath.Join(programDir, "start-tModLoaderServer.sh"), "-nosteam")
 	cmd.Dir = programDir
+	proxy := viper.GetString("ns.proxy")
+	if proxy != "" {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("all_proxy=%s", proxy))
+	}
+
 	p := core.NewProcess("Dotnet", cmd)
 	rh := core.NewRecord("Dotnet", logPath)
 
@@ -281,9 +287,6 @@ func deployMod() error {
 	if err := installMods(enableModIds); err != nil {
 		return err
 	}
-	if err := enableMods(enableModIds); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -309,115 +312,26 @@ func downloadMods(enableModIds []string) error {
 }
 
 func installMods(enableModIds []string) error {
-
+	var enableModNames []string
 	for _, id := range enableModIds {
-		if err := copyMod(id); err != nil {
+		tmod, err := getCompatibleTmod(id)
+		if err != nil {
 			return err
 		}
-	}
-	return nil
-}
 
-func copyMod(id string) error {
-	latestModDir, err := getLatestModDir(id)
-	if err != nil {
-		return err
-	}
-	files, err := os.ReadDir(latestModDir)
-	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".tmod") {
-			if err := comm.CopyFile(filepath.Join(latestModDir, file.Name()), modDir); err != nil {
-				return err
-			}
-			log.Infof("copy mod from %s to %s", filepath.Join(latestModDir, file.Name()), modDir)
+		// install mod
+		if err := comm.CopyFile(tmod.Path, modDir); err != nil {
+			return err
 		}
-	}
-	return nil
-}
+		log.Debugf("copy mod from %s to %s", tmod.Path, modDir)
 
-func getLatestModDir(id string) (string, error) {
-	singleModDir := filepath.Join(steamModDir, id)
-	if _, err := os.Stat(singleModDir); os.IsNotExist(err) {
-		return "", err
+		enableModNames = append(enableModNames, tmod.Name)
 	}
 
-	files, err := os.ReadDir(singleModDir)
-	if err != nil {
-		return "", err
-	}
-
-	var m []ModDateDir
-	for _, file := range files {
-		if file.IsDir() {
-			t, err := time.Parse("2006.2", file.Name())
-			if err != nil {
-				return "", err
-			}
-			m = append(m, ModDateDir{file.Name(), t})
-		}
-	}
-
-	sort.Sort(ModDateDirList(m))
-	latestDirname := m[len(m)-1].dirname
-	return filepath.Join(singleModDir, latestDirname), nil
-}
-
-type ModDateDirList []ModDateDir
-type ModDateDir struct {
-	dirname string
-	time    time.Time
-}
-
-func (s ModDateDirList) Len() int {
-	return len(s)
-}
-
-func (s ModDateDirList) Less(i, j int) bool {
-	return s[i].time.Unix() < s[j].time.Unix()
-}
-
-func (s ModDateDirList) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
-func enableMods(enableModIds []string) error {
-	bytes, err := json.MarshalIndent(enableModIds, "", "    ")
+	// write enable.json
+	bytes, err := json.MarshalIndent(enableModNames, "", "  ")
 	if err != nil {
 		return err
 	}
 	return comm.WriteFile(enableJson, bytes)
-}
-
-func getReportPatterns() []*core.ReportPattern {
-	events := []*core.ReportPattern{
-		{
-			// Finding ModMap...
-			PatternString: `Finding ModMap`,
-			Format:        "正在加载 Mod",
-			Level:         "info",
-		},
-		{
-			// Creating world
-			PatternString: `Creating world`,
-			Format:        "正在生成世界",
-			Level:         "info",
-		},
-		{
-			// Loading world data: 1%
-			PatternString: `Loading world data: 1%`,
-			Format:        "正在加载世界",
-			Level:         "info",
-		},
-		{
-			// Server started
-			PatternString: `Server started`,
-			Format:        "服务器启动成功",
-			Level:         "warning",
-			Type:          EventTypeServerStatus,
-		},
-	}
-	for i := range events {
-		events[i].Pattern = regexp.MustCompile(events[i].PatternString)
-	}
-	return events
 }
