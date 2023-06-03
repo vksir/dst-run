@@ -2,6 +2,7 @@ package tmodloader
 
 import (
 	"dst-run/internal/comm"
+	"dst-run/internal/core"
 	"dst-run/thirdparty/steam"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,7 @@ import (
 func LoadRouters(g *gin.RouterGroup) {
 	g = g.Group("/tmodloader")
 
+	g.GET("/status", getStatus)
 	g.POST("/control/:action", control)
 
 	g.GET("/server_config", getServerConfig)
@@ -25,9 +27,21 @@ func LoadRouters(g *gin.RouterGroup) {
 	g.DELETE("/mod", delMods)
 	g.PUT("/mod", updateMods)
 
-	g.GET("/runtime/players", getPlayers)
+	g.GET("/runtime/player", getPlayers)
 
-	g.GET("/events", getEvents)
+	g.GET("/event", getEvents)
+}
+
+// getStatus godoc
+// @Summary			获取服务器状态
+// @Tags			tmodloader
+// @Accept			json
+// @Produce			json
+// @Success			200 {object} Status
+// @Failure			500 {object} comm.RespErr
+// @Router			/api/tmodloader/status [get]
+func getStatus(c *gin.Context) {
+	c.JSON(http.StatusOK, Status{Agent.Status()})
 }
 
 // control godoc
@@ -38,7 +52,7 @@ func LoadRouters(g *gin.RouterGroup) {
 // @Param			action path string true "[ start | stop | restart | update | install ]"
 // @Success			200 {object} comm.RespOk
 // @Failure			500 {object} comm.RespErr
-// @Router			/tmodloader/control/{action} [post]
+// @Router			/api/tmodloader/control/{action} [post]
 func control(c *gin.Context) {
 	action := c.Param("action")
 
@@ -82,7 +96,7 @@ func control(c *gin.Context) {
 // @Produce			json
 // @Success			200 {object} ServerConfig
 // @Failure			500 {object} comm.RespErr
-// @Router			/tmodloader/server_config [get]
+// @Router			/api/tmodloader/server_config [get]
 func getServerConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, ServerConfig{
 		WorldName:  viper.GetString("tmodloader.world_name"),
@@ -104,7 +118,7 @@ func getServerConfig(c *gin.Context) {
 // @Param			body body ServerConfig true "body"
 // @Success			200 {object} comm.RespOk
 // @Failure			500 {object} comm.RespErr
-// @Router			/tmodloader/server_config [put]
+// @Router			/api/tmodloader/server_config [put]
 func updateServerConfig(c *gin.Context) {
 	var s ServerConfig
 	if err := c.ShouldBindJSON(&s); err != nil {
@@ -130,7 +144,7 @@ func updateServerConfig(c *gin.Context) {
 // @Produce			json
 // @Success			200 {object} ModMap
 // @Failure			500 {object} comm.RespErr
-// @Router			/tmodloader/mod [get]
+// @Router			/api/tmodloader/mod [get]
 func getMods(c *gin.Context) {
 	mods, err := getModsInDB()
 	if err != nil {
@@ -148,7 +162,7 @@ func getMods(c *gin.Context) {
 // @Param			body body ModMap true "body"
 // @Success			200 {object} comm.RespOk
 // @Failure			500 {object} comm.RespErr
-// @Router			/tmodloader/mod [post]
+// @Router			/api/tmodloader/mod [post]
 func addMods(c *gin.Context) {
 	mods := make(map[string]*Mod)
 	if err := c.ShouldBindJSON(&mods); err != nil {
@@ -181,7 +195,7 @@ func addMods(c *gin.Context) {
 // @Param			body body string true "多个 Mod ID 一行一个"
 // @Success			200 {object} comm.RespOk
 // @Failure			500 {object} comm.RespErr
-// @Router			/tmodloader/mod/mod_id [post]
+// @Router			/api/tmodloader/mod/mod_id [post]
 func addModsFromId(c *gin.Context) {
 	bytes, err := io.ReadAll(c.Request.Body)
 	if err != nil {
@@ -223,7 +237,7 @@ func addModsFromId(c *gin.Context) {
 // @Param			body body ModIdList true "body"
 // @Success			200 {object} comm.RespOk
 // @Failure			500 {object} comm.RespErr
-// @Router			/tmodloader/mod [delete]
+// @Router			/api/tmodloader/mod [delete]
 func delMods(c *gin.Context) {
 	var modIds []string
 	if err := c.ShouldBindJSON(&modIds); err != nil {
@@ -247,7 +261,7 @@ func delMods(c *gin.Context) {
 // @Param			body body ModMap true "body"
 // @Success			200 {object} comm.RespOk
 // @Failure			500 {object} comm.RespErr
-// @Router			/tmodloader/mod [put]
+// @Router			/api/tmodloader/mod [put]
 func updateMods(c *gin.Context) {
 	mods := make(map[string]*Mod)
 	if err := c.ShouldBindJSON(&mods); err != nil {
@@ -282,10 +296,10 @@ func updateMods(c *gin.Context) {
 // @Produce			json
 // @Success			200 {object} ModIdList
 // @Failure			500 {object} comm.RespErr
-// @Router			/tmodloader/runtime/players [get]
+// @Router			/api/tmodloader/runtime/player [get]
 func getPlayers(c *gin.Context) {
-	if !Agent.Active() {
-		c.JSON(http.StatusBadRequest, comm.NewRespErr("server not running"))
+	if Agent.Status() != core.StatusActive {
+		c.JSON(http.StatusBadRequest, comm.NewRespErr("server is not active"))
 	}
 
 	a := Agent.Driver.(*AgentDriver)
@@ -306,7 +320,7 @@ func getPlayers(c *gin.Context) {
 // @Produce			json
 // @Success			200 {object} core.ReportEventList
 // @Failure			500 {object} comm.RespErr
-// @Router			/tmodloader/events [get]
+// @Router			/api/tmodloader/event [get]
 func getEvents(c *gin.Context) {
 	events, err := R.GetEvents()
 	if err != nil {

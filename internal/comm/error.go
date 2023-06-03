@@ -9,6 +9,7 @@ const (
 	ErrOk = iota
 	ErrSys
 	ErrHttp
+	ErrLocked
 	ErrMax
 )
 

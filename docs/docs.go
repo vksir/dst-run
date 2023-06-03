@@ -16,7 +16,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/tmodloader/control/{action}": {
+        "/api/tmodloader/control/{action}": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -53,7 +53,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/tmodloader/events": {
+        "/api/tmodloader/event": {
             "get": {
                 "description": "ReportEvent Type: [ SERVER_ACTIVE ]",
                 "consumes": [
@@ -85,7 +85,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/tmodloader/mod": {
+        "/api/tmodloader/mod": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -233,7 +233,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/tmodloader/mod/mod_id": {
+        "/api/tmodloader/mod/mod_id": {
             "post": {
                 "consumes": [
                     "text/plain"
@@ -272,7 +272,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/tmodloader/runtime/players": {
+        "/api/tmodloader/runtime/player": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -303,7 +303,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/tmodloader/server_config": {
+        "/api/tmodloader/server_config": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -357,6 +357,34 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/comm.RespOk"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/comm.RespErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tmodloader/status": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader"
+                ],
+                "summary": "获取服务器状态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/tmodloader.Status"
                         }
                     },
                     "500": {
@@ -469,6 +497,14 @@ const docTemplate = `{
                 },
                 "world_name": {
                     "type": "string"
+                }
+            }
+        },
+        "tmodloader.Status": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "integer"
                 }
             }
         }

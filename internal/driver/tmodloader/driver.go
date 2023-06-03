@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -38,11 +39,14 @@ func (a *AgentDriver) Name() string {
 	return "TMod"
 }
 
-func (a *AgentDriver) Processes() []*core.Process {
-	return a.processes
-}
+func (a *AgentDriver) Start(ctx context.Context, wg *sync.WaitGroup) error {
+	if err := deployServerConfig(); err != nil {
+		return err
+	}
+	if err := deployMod(); err != nil {
+		return err
+	}
 
-func (a *AgentDriver) Start() error {
 	a.processes = []*core.Process{}
 	a.recordHandlers = []*core.Record{}
 	a.cutHandlers = []*core.Cut{}
@@ -62,8 +66,10 @@ func (a *AgentDriver) Start() error {
 	a.recordHandlers = append(a.recordHandlers, rh)
 	a.cutHandlers = append(a.cutHandlers, ch)
 
-	R.WaitEvent(context.Background(), EventTypeServerActive)
-	log.Infof("[%s] start complete", a.Name())
+	go func() {
+		R.WaitEvent(ctx, EventTypeServerActive)
+		wg.Done()
+	}()
 	return nil
 }
 
@@ -71,7 +77,7 @@ func (a *AgentDriver) Stop() error {
 	p := a.processes[0]
 
 	if _, err := p.Stdin.Write([]byte("exit\n")); err != nil {
-		log.Error("process write exit failed: ", err)
+		log.Errorf("[%s] process write exit failed: %s", a.Name(), err)
 	}
 
 	ctx, cancel := context.WithTimeout(p.Ctx, 15*time.Second)
@@ -82,9 +88,10 @@ func (a *AgentDriver) Stop() error {
 	}
 
 	if err := ctx.Err(); err == context.DeadlineExceeded {
-		log.Errorf("process exit timeout, begin kill: %s", err)
+		log.Errorf("[%s] process exit timeout, begin kill: %s", a.Name(), err)
 		if err := p.Cmd.Process.Signal(os.Kill); err != nil {
-			log.Errorf("process kill failed: %s", err)
+			log.Panicf("[%s] process kill failed: %s", a.Name(), err)
+			return comm.NewErr(err)
 		}
 	}
 
@@ -94,6 +101,8 @@ func (a *AgentDriver) Stop() error {
 		Level: "warning",
 		Type:  EventTypeServerActive,
 	})
+
+	a.processes = []*core.Process{}
 	return nil
 }
 
@@ -134,16 +143,6 @@ func (a *AgentDriver) Update() error {
 		Level: "warning",
 	})
 	return installProgram(latestTag)
-}
-
-func (a *AgentDriver) Config() error {
-	if err := deployServerConfig(); err != nil {
-		return err
-	}
-	if err := deployMod(); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (a *AgentDriver) RunCmd(index int, cmd string) (string, error) {

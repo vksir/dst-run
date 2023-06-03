@@ -1,5 +1,9 @@
 package tmodloader
 
+type Status struct {
+	Status int `json:"status"`
+}
+
 type ModMap map[string]*Mod
 type ModIdList []string
 type Mod struct {

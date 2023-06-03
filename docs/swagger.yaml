@@ -68,12 +68,17 @@ definitions:
       world_name:
         type: string
     type: object
+  tmodloader.Status:
+    properties:
+      status:
+        type: integer
+    type: object
 info:
   contact: {}
   title: Neutron Star
   version: "1.0"
 paths:
-  /tmodloader/control/{action}:
+  /api/tmodloader/control/{action}:
     post:
       consumes:
       - application/json
@@ -97,7 +102,7 @@ paths:
       summary: 服务器控制
       tags:
       - tmodloader
-  /tmodloader/events:
+  /api/tmodloader/event:
     get:
       consumes:
       - application/json
@@ -118,7 +123,7 @@ paths:
       summary: 获取最近事件
       tags:
       - tmodloader
-  /tmodloader/mod:
+  /api/tmodloader/mod:
     delete:
       consumes:
       - application/json
@@ -214,7 +219,7 @@ paths:
       summary: 更新 Mods
       tags:
       - tmodloader
-  /tmodloader/mod/mod_id:
+  /api/tmodloader/mod/mod_id:
     post:
       consumes:
       - text/plain
@@ -239,7 +244,7 @@ paths:
       summary: 通过 Mod ID 添加 Mods
       tags:
       - tmodloader
-  /tmodloader/runtime/players:
+  /api/tmodloader/runtime/player:
     get:
       consumes:
       - application/json
@@ -259,7 +264,7 @@ paths:
       summary: 获取当前玩家
       tags:
       - tmodloader
-  /tmodloader/server_config:
+  /api/tmodloader/server_config:
     get:
       consumes:
       - application/json
@@ -299,6 +304,24 @@ paths:
           schema:
             $ref: '#/definitions/comm.RespErr'
       summary: 更新 ServerConfig
+      tags:
+      - tmodloader
+  /api/tmodloader/status:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/tmodloader.Status'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/comm.RespErr'
+      summary: 获取服务器状态
       tags:
       - tmodloader
 swagger: "2.0"

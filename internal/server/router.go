@@ -19,7 +19,7 @@ func redirectSwagger(c *gin.Context) {
 }
 
 func loadRouters(e *gin.Engine) {
-	publicGroup := e.Group("/")
+	publicGroup := e.Group("/api")
 	loadSwaggerRouters(publicGroup)
 	tmodloader.LoadRouters(publicGroup)
 }

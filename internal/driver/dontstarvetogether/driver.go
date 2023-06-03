@@ -59,7 +59,7 @@ func (a *AgentDriver) Stop() error {
 	log.Infof("[%s] begin stop process: ", a.Name())
 	for _, p := range a.processes {
 		if err := p.Cmd.Process.Signal(os.Interrupt); err != nil {
-			return comm.NewErr(err)
+			log.Errorf("[%s] process signal interrupt failed: %s", a.Name(), err)
 		}
 	}
 
@@ -77,10 +77,13 @@ func (a *AgentDriver) Stop() error {
 		log.Infof("[%s] stop process timeout, begin kill", a.Name())
 		for _, p := range a.processes {
 			if err := p.Cmd.Process.Signal(os.Kill); err != nil {
+				log.Panicf("[%s] process kill failed: %s", a.Name(), err)
 				return comm.NewErr(err)
 			}
 		}
 	}
+
+	a.processes = []*core.Process{}
 	return nil
 }
 
