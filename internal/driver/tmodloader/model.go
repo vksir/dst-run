@@ -4,6 +4,8 @@ type Status struct {
 	Status int `json:"status"`
 }
 
+type PlayerList []string
+
 type ModMap map[string]*Mod
 type ModIdList []string
 type Mod struct {
@@ -13,7 +15,7 @@ type Mod struct {
 	Config string `json:"config"`
 }
 
-type ServerConfig struct {
+type Config struct {
 	AutoCreate int      `json:"auto_create" binding:"oneof=1 2 3"`
 	Difficulty int      `json:"difficulty" binding:"oneof=0 1 2 3"`
 	MaxPlayers int      `json:"max_players" binding:"gt=0"`

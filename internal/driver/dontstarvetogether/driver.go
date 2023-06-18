@@ -11,8 +11,17 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
+
+const (
+	EventTypeServerActive   = "SERVER_ACTIVE"
+	EventTypeServerInactive = "SERVER_INACTIVE"
+)
+
+var R = core.NewReport("DST", getReportPatterns())
+var Agent = core.NewAgent(NewAgentDriver())
 
 type AgentDriver struct {
 	processes      []*core.Process
@@ -32,7 +41,11 @@ func (a *AgentDriver) Processes() []*core.Process {
 	return a.processes
 }
 
-func (a *AgentDriver) Start() error {
+func (a *AgentDriver) Start(ctx context.Context, wg *sync.WaitGroup) error {
+	if err := a.config(); err != nil {
+		return err
+	}
+
 	a.processes = []*core.Process{}
 	a.recordHandlers = []*core.Record{}
 	a.cutHandlers = []*core.Cut{}
@@ -52,6 +65,12 @@ func (a *AgentDriver) Start() error {
 		a.recordHandlers = append(a.recordHandlers, rh)
 		a.cutHandlers = append(a.cutHandlers, ch)
 	}
+
+	go func() {
+		R.WaitEvent(ctx, EventTypeServerActive)
+		wg.Done()
+	}()
+
 	return nil
 }
 
@@ -83,30 +102,36 @@ func (a *AgentDriver) Stop() error {
 		}
 	}
 
+	R.CacheEvent(&core.ReportEvent{
+		Time:  time.Now().Unix(),
+		Msg:   "服务器停止运行",
+		Level: "warning",
+		Type:  EventTypeServerInactive,
+	})
+
 	a.processes = []*core.Process{}
 	return nil
 }
 
 func (a *AgentDriver) Install() error {
-	p := core.NewProcess("Steam", getInstallCmd())
-	rh := core.NewRecord("Steam", logPath)
-
-	p.RegisterHandler(rh)
-	if err := p.Start(); err != nil {
-		return err
-	}
-
-	select {
-	case <-p.Ctx.Done():
-		return nil
-	}
+	R.CacheEvent(&core.ReportEvent{
+		Time:  time.Now().Unix(),
+		Msg:   "正在安装服务器",
+		Level: "warning",
+	})
+	return installProgram()
 }
 
 func (a *AgentDriver) Update() error {
-	return a.Install()
+	R.CacheEvent(&core.ReportEvent{
+		Time:  time.Now().Unix(),
+		Msg:   "正在更新服务器",
+		Level: "warning",
+	})
+	return installProgram()
 }
 
-func (a *AgentDriver) Config() error {
+func (a *AgentDriver) config() error {
 	if err := createClusterIfNotExist(); err != nil {
 		return err
 	}
@@ -155,26 +180,45 @@ func (a *AgentDriver) RunCmd(index int, cmd string) (string, error) {
 	return res[1], nil
 }
 
+func installProgram() error {
+	p := core.NewProcess("Steam", getInstallCmd())
+	rh := core.NewRecord("Steam", logPath)
+
+	p.RegisterHandler(rh)
+	if err := p.Start(); err != nil {
+		return err
+	}
+
+	select {
+	case <-p.Ctx.Done():
+		return nil
+	}
+}
+
 func createClusterIfNotExist() error {
-	if _, err := os.Stat(clusterDir); err == os.ErrNotExist {
-		return comm.CopyFile(filepath.Join(defaultTemplateDir, "default"), clusterDir)
+	cp := NewClusterPath()
+	if _, err := os.Stat(cp.Root); err == os.ErrNotExist {
+		return comm.CopyFile(filepath.Join(defaultTemplateDir, "default"), cp.Root)
 	}
 	return nil
 }
 
 func deployAdminList() error {
+	cp := NewClusterPath()
 	admins := viper.GetStringSlice("dontstarve.admin_list")
 	content := strings.Join(admins, "\n")
-	return comm.WriteFile(adminListPath, []byte(content))
+	return comm.WriteFile(cp.AdminListFile, []byte(content))
 }
 
 func deployClusterToken() error {
+	cp := NewClusterPath()
 	token := viper.GetString("dontstarve.cluster_token")
-	return comm.WriteFile(clusterTokenPath, []byte(token))
+	return comm.WriteFile(cp.TokenFile, []byte(token))
 }
 
 func deployClusterIni() error {
-	cfg, err := ini.Load(clusterIniPath)
+	cp := NewClusterPath()
+	cfg, err := ini.Load(cp.SettingFile)
 	if err != nil {
 		return err
 	}
@@ -196,9 +240,10 @@ func deployClusterIni() error {
 }
 
 func deployMod() error {
+	cp := NewClusterPath()
 	enableModIds := viper.GetStringSlice("dontstarve.enable_mods")
 
-	mods, err := getModsFromDB()
+	mods, err := getModsInDB()
 	if err != nil {
 		return err
 	}
@@ -212,10 +257,10 @@ func deployMod() error {
 	}
 
 	content := "return {" + strings.Join(enableModConfigs, ",") + "}"
-	if err := comm.WriteFile(masterModOverrides, []byte(content)); err != nil {
+	if err := comm.WriteFile(cp.Master.ModOverrideFile, []byte(content)); err != nil {
 		return err
 	}
-	if err := comm.WriteFile(cavesModOverrides, []byte(content)); err != nil {
+	if err := comm.WriteFile(cp.Caves.ModOverrideFile, []byte(content)); err != nil {
 		return err
 	}
 

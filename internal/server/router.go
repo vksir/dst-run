@@ -2,6 +2,7 @@ package server
 
 import (
 	_ "dst-run/docs"
+	"dst-run/internal/driver/dontstarvetogether"
 	"dst-run/internal/driver/tmodloader"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -21,5 +22,6 @@ func redirectSwagger(c *gin.Context) {
 func loadRouters(e *gin.Engine) {
 	publicGroup := e.Group("/api")
 	loadSwaggerRouters(publicGroup)
+	dontstarvetogether.LoadRouters(publicGroup)
 	tmodloader.LoadRouters(publicGroup)
 }

@@ -18,8 +18,8 @@ func LoadRouters(g *gin.RouterGroup) {
 	g.GET("/status", getStatus)
 	g.POST("/control/:action", control)
 
-	g.GET("/server_config", getServerConfig)
-	g.PUT("/server_config", updateServerConfig)
+	g.GET("/config", getConfig)
+	g.PUT("/config", updateConfig)
 
 	g.GET("/mod", getMods)
 	g.POST("/mod", addMods)
@@ -89,16 +89,16 @@ func control(c *gin.Context) {
 	c.JSON(http.StatusOK, comm.NewRespOk())
 }
 
-// getServerConfig godoc
-// @Summary			获取 ServerConfig
+// getConfig godoc
+// @Summary			获取 Config
 // @Tags			tmodloader
 // @Accept			json
 // @Produce			json
-// @Success			200 {object} ServerConfig
+// @Success			200 {object} Config
 // @Failure			500 {object} comm.RespErr
-// @Router			/api/tmodloader/server_config [get]
-func getServerConfig(c *gin.Context) {
-	c.JSON(http.StatusOK, ServerConfig{
+// @Router			/api/tmodloader/config [get]
+func getConfig(c *gin.Context) {
+	c.JSON(http.StatusOK, Config{
 		WorldName:  viper.GetString("tmodloader.world_name"),
 		AutoCreate: viper.GetInt("tmodloader.auto_create"),
 		Difficulty: viper.GetInt("tmodloader.difficulty"),
@@ -110,29 +110,24 @@ func getServerConfig(c *gin.Context) {
 	})
 }
 
-// updateServerConfig godoc
-// @Summary			更新 ServerConfig
+// updateConfig godoc
+// @Summary			更新 Config
 // @Tags			tmodloader
 // @Accept			json
 // @Produce			json
-// @Param			body body ServerConfig true "body"
+// @Param			body body Config true "body"
 // @Success			200 {object} comm.RespOk
 // @Failure			500 {object} comm.RespErr
-// @Router			/api/tmodloader/server_config [put]
-func updateServerConfig(c *gin.Context) {
-	var s ServerConfig
-	if err := c.ShouldBindJSON(&s); err != nil {
+// @Router			/api/tmodloader/config [put]
+func updateConfig(c *gin.Context) {
+	var cfg map[string]any
+	if err := c.ShouldBindJSON(&cfg); err != nil {
 		c.JSON(http.StatusBadRequest, comm.NewRespErr(err))
 		return
 	}
-	viper.Set("tmodloader.world_name", s.WorldName)
-	viper.Set("tmodloader.auto_create", s.AutoCreate)
-	viper.Set("tmodloader.difficulty", s.Difficulty)
-	viper.Set("tmodloader.seed", s.Seed)
-	viper.Set("tmodloader.max_players", s.MaxPlayers)
-	viper.Set("tmodloader.password", s.Password)
-	viper.Set("tmodloader.port", s.Port)
-	viper.Set("tmodloader.enable_mods", s.EnableMods)
+	for k, v := range cfg {
+		viper.Set(fmt.Sprintf("tmodloader.%s", k), v)
+	}
 	comm.SaveConfig()
 	c.JSON(http.StatusOK, comm.NewRespOk())
 }
@@ -294,7 +289,7 @@ func updateMods(c *gin.Context) {
 // @Tags			tmodloader
 // @Accept			json
 // @Produce			json
-// @Success			200 {object} ModIdList
+// @Success			200 {object} PlayerList
 // @Failure			500 {object} comm.RespErr
 // @Router			/api/tmodloader/runtime/player [get]
 func getPlayers(c *gin.Context) {

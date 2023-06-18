@@ -13,6 +13,10 @@ import (
 
 var log = GetSugaredLogger()
 
+func ReadFile(path string) ([]byte, error) {
+	return os.ReadFile(path)
+}
+
 func WriteFile(path string, content []byte) error {
 	return os.WriteFile(path, content, 0640)
 }

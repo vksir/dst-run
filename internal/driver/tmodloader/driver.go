@@ -19,7 +19,8 @@ import (
 )
 
 const (
-	EventTypeServerActive = "SERVER_ACTIVE"
+	EventTypeServerActive   = "SERVER_ACTIVE"
+	EventTypeServerInactive = "SERVER_INACTIVE"
 )
 
 var R = core.NewReport("TMod", getReportPatterns())
@@ -97,9 +98,9 @@ func (a *AgentDriver) Stop() error {
 
 	R.CacheEvent(&core.ReportEvent{
 		Time:  time.Now().Unix(),
-		Msg:   "服务器已停止",
+		Msg:   "服务器停止运行",
 		Level: "warning",
-		Type:  EventTypeServerActive,
+		Type:  EventTypeServerInactive,
 	})
 
 	a.processes = []*core.Process{}

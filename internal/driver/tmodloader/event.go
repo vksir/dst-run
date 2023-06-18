@@ -39,15 +39,15 @@ func getReportPatterns() []*core.ReportPattern {
 			Level:         "info",
 		},
 		{
-			// <Villkiss> hello
-			PatternString: `<(.*)> (.*)`,
-			Format:        "%s说：%s",
+			// Villkiss has left.
+			PatternString: `(.*) has left\.`,
+			Format:        "%s离开游戏",
 			Level:         "info",
 		},
 		{
-			// Villkiss has left.
-			PatternString: `(.*) has left\.`,
-			Format:        "%s退出游戏",
+			// <Villkiss> hello
+			PatternString: `<(.*)> (.*)`,
+			Format:        "%s说：%s",
 			Level:         "info",
 		},
 	}
