@@ -41,10 +41,7 @@ func (a *AgentDriver) Name() string {
 }
 
 func (a *AgentDriver) Start(ctx context.Context, wg *sync.WaitGroup) error {
-	if err := deployServerConfig(); err != nil {
-		return err
-	}
-	if err := deployMod(); err != nil {
+	if err := a.config(); err != nil {
 		return err
 	}
 
@@ -127,7 +124,7 @@ func (a *AgentDriver) Update() error {
 		return err
 	}
 
-	curVer, ok := data["version"]
+	curVer, ok := comm.GetCacheSafe("tml_version")
 	if ok {
 		curVerString, ok := curVer.(string)
 		if ok {
@@ -176,6 +173,23 @@ func (a *AgentDriver) RunCmd(index int, cmd string) (string, error) {
 	return res[1], nil
 }
 
+func (a *AgentDriver) config() error {
+	worldName := viper.GetString("tmodloader.world_name")
+	ap := NewArchivePath(worldName)
+	if !comm.ExistPath(ap.Root) {
+		if err := createArchive(worldName); err != nil {
+			return err
+		}
+	}
+	if err := deployServerConfig(); err != nil {
+		return err
+	}
+	if err := deployMod(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func installProgram(tag string) error {
 	if err := comm.ClearDir(programDir); err != nil {
 		return err
@@ -188,8 +202,7 @@ func installProgram(tag string) error {
 		return err
 	}
 
-	data["version"] = tag
-	_ = SaveData()
+	comm.SetCache("tml_version", tag)
 	return nil
 }
 
@@ -245,13 +258,13 @@ func deployServerConfig() error {
 	}
 	content := string(b)
 
-	worldName := viper.GetString("tmodloader.world_name")
+	ap := NewCurArchivePath()
 	m := map[string]string{
-		"world":      filepath.Join(worldDir, worldName+".wld"),
+		"world":      ap.WldPath,
 		"worldname":  viper.GetString("tmodloader.world_name"),
 		"autocreate": viper.GetString("tmodloader.auto_create"),
 		"difficulty": viper.GetString("tmodloader.difficulty"),
-		"worldpath":  worldDir,
+		"worldpath":  ap.Root,
 		"seed":       viper.GetString("tmodloader.seed"),
 		"maxplayers": viper.GetString("tmodloader.max_players"),
 		"password":   viper.GetString("tmodloader.password"),
@@ -334,4 +347,9 @@ func installMods(enableModIds []string) error {
 		return err
 	}
 	return comm.WriteFile(enableJson, bytes)
+}
+
+func createArchive(name string) error {
+	ap := NewArchivePath(name)
+	return comm.MkDir(ap.Root)
 }

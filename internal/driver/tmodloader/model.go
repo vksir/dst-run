@@ -15,6 +15,14 @@ type Mod struct {
 	Config string `json:"config"`
 }
 
+type ArchiveMap map[string]*Archive
+type ArchiveNameList []string
+type Archive struct {
+	Name     string `json:"name" binding:"required"`
+	CreateAt string `json:"create_at"`
+	UpdateAt string `json:"update_at"`
+}
+
 type Config struct {
 	AutoCreate int      `json:"auto_create" binding:"oneof=1 2 3"`
 	Difficulty int      `json:"difficulty" binding:"oneof=0 1 2 3"`
@@ -24,4 +32,9 @@ type Config struct {
 	Seed       string   `json:"seed"`
 	WorldName  string   `json:"world_name"`
 	EnableMods []string `json:"enable_mods"`
+}
+
+type ArchivePath struct {
+	Root    string
+	WldPath string
 }

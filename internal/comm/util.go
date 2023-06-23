@@ -13,6 +13,11 @@ import (
 
 var log = GetSugaredLogger()
 
+func ExistPath(path string) bool {
+	_, err := os.Stat(path)
+	return os.IsExist(err)
+}
+
 func ReadFile(path string) ([]byte, error) {
 	return os.ReadFile(path)
 }
@@ -40,6 +45,19 @@ func MkDir(paths ...string) error {
 func ClearDir(path string) error {
 	cmdString := fmt.Sprintf("rm -rf %s", filepath.Join(path, "*"))
 	cmd := exec.Command("bash", "-c", cmdString)
+	return RunCmd(cmd)
+}
+
+func Compress(targetPath string, workingDir string, compressPath ...string) error {
+	args := append([]string{"-qr", targetPath}, compressPath...)
+	cmd := exec.Command("zip", args...)
+	cmd.Dir = workingDir
+	return RunCmd(cmd)
+}
+
+func UnCompress(workingDir, unCompressPath string) error {
+	cmd := exec.Command("unzip", unCompressPath)
+	cmd.Dir = workingDir
 	return RunCmd(cmd)
 }
 

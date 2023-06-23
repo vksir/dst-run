@@ -149,7 +149,7 @@ func updateConfig(c *gin.Context) {
 // @Failure			500 {object} comm.RespErr
 // @Router			/api/dontstarve/world_override [get]
 func getWorldOverride(c *gin.Context) {
-	cp := NewClusterPath()
+	cp := NewCurClusterPath()
 
 	master, err := comm.ReadFile(cp.Master.WorldOverrideFile)
 	if err != nil {
@@ -183,7 +183,7 @@ func updateWorldOverride(c *gin.Context) {
 		return
 	}
 
-	cp := NewClusterPath()
+	cp := NewCurClusterPath()
 	if err := comm.WriteFile(cp.Master.WorldOverrideFile, []byte(wo.Master)); err != nil {
 		c.JSON(http.StatusInternalServerError, comm.NewRespErr(err))
 		return

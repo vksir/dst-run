@@ -488,6 +488,101 @@ paths:
       summary: 更新世界设置
       tags:
       - dontstarve
+  /api/tmodloader/archive:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: body
+        in: body
+        name: body
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/comm.RespOk'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/comm.RespErr'
+      summary: 删除存档
+      tags:
+      - tmodloader
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/comm.RespErr'
+      summary: 查看存档
+      tags:
+      - tmodloader
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: body
+        in: body
+        name: body
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/comm.RespOk'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/comm.RespErr'
+      summary: 添加存档
+      tags:
+      - tmodloader
+  /api/tmodloader/archive/download:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: name
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/comm.RespOk'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/comm.RespErr'
+      summary: 下载存档
+      tags:
+      - tmodloader
   /api/tmodloader/config:
     get:
       consumes:

@@ -131,25 +131,6 @@ func (a *AgentDriver) Update() error {
 	return installProgram()
 }
 
-func (a *AgentDriver) config() error {
-	if err := createClusterIfNotExist(); err != nil {
-		return err
-	}
-	if err := deployAdminList(); err != nil {
-		return err
-	}
-	if err := deployClusterToken(); err != nil {
-		return err
-	}
-	if err := deployClusterIni(); err != nil {
-		return err
-	}
-	if err := deployMod(); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (a *AgentDriver) RunCmd(index int, cmd string) (string, error) {
 	if index >= len(a.processes) {
 		return "", fmt.Errorf("invalid index: %d", index)
@@ -180,6 +161,25 @@ func (a *AgentDriver) RunCmd(index int, cmd string) (string, error) {
 	return res[1], nil
 }
 
+func (a *AgentDriver) config() error {
+	if err := createClusterIfNotExist(); err != nil {
+		return err
+	}
+	if err := deployAdminList(); err != nil {
+		return err
+	}
+	if err := deployClusterToken(); err != nil {
+		return err
+	}
+	if err := deployClusterIni(); err != nil {
+		return err
+	}
+	if err := deployMod(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func installProgram() error {
 	p := core.NewProcess("Steam", getInstallCmd())
 	rh := core.NewRecord("Steam", logPath)
@@ -196,7 +196,7 @@ func installProgram() error {
 }
 
 func createClusterIfNotExist() error {
-	cp := NewClusterPath()
+	cp := NewCurClusterPath()
 	if _, err := os.Stat(cp.Root); err == os.ErrNotExist {
 		return comm.CopyFile(filepath.Join(defaultTemplateDir, "default"), cp.Root)
 	}
@@ -204,20 +204,20 @@ func createClusterIfNotExist() error {
 }
 
 func deployAdminList() error {
-	cp := NewClusterPath()
+	cp := NewCurClusterPath()
 	admins := viper.GetStringSlice("dontstarve.admin_list")
 	content := strings.Join(admins, "\n")
 	return comm.WriteFile(cp.AdminListFile, []byte(content))
 }
 
 func deployClusterToken() error {
-	cp := NewClusterPath()
+	cp := NewCurClusterPath()
 	token := viper.GetString("dontstarve.cluster_token")
 	return comm.WriteFile(cp.TokenFile, []byte(token))
 }
 
 func deployClusterIni() error {
-	cp := NewClusterPath()
+	cp := NewCurClusterPath()
 	cfg, err := ini.Load(cp.SettingFile)
 	if err != nil {
 		return err
@@ -240,7 +240,7 @@ func deployClusterIni() error {
 }
 
 func deployMod() error {
-	cp := NewClusterPath()
+	cp := NewCurClusterPath()
 	enableModIds := viper.GetStringSlice("dontstarve.enable_mods")
 
 	mods, err := getModsInDB()

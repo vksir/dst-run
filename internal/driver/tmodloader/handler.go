@@ -9,8 +9,14 @@ import (
 	"github.com/spf13/viper"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
+	"sync"
+	"time"
 )
+
+var upDownLock sync.Mutex
 
 func LoadRouters(g *gin.RouterGroup) {
 	g = g.Group("/tmodloader")
@@ -26,6 +32,12 @@ func LoadRouters(g *gin.RouterGroup) {
 	g.POST("/mod/mod_id", addModsFromId)
 	g.DELETE("/mod", delMods)
 	g.PUT("/mod", updateMods)
+
+	g.GET("/archive", getArchives)
+	g.POST("/archive", addArchives)
+	g.DELETE("/archive", delArchives)
+	g.GET("/archive/download", downloadArchive)
+	g.POST("/archive/upload", uploadArchive)
 
 	g.GET("/runtime/player", getPlayers)
 
@@ -282,6 +294,117 @@ func updateMods(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, comm.NewRespOk())
+}
+
+// getArchives godoc
+// @Summary			查看存档
+// @Tags			tmodloader
+// @Accept			json
+// @Produce			json
+// @Success			200 {object} ArchiveNameList
+// @Failure			500 {object} comm.RespErr
+// @Router			/api/tmodloader/archive [get]
+func getArchives(c *gin.Context) {
+	var names []string
+
+	entries, err := os.ReadDir(archiveDir)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, comm.NewRespErr(err))
+		return
+	}
+	for _, entry := range entries {
+		names = append(names, entry.Name())
+	}
+
+	c.JSON(http.StatusOK, names)
+}
+
+// addArchives godoc
+// @Summary			添加存档
+// @Tags			tmodloader
+// @Accept			json
+// @Produce			json
+// @Param			body body ArchiveNameList true "body"
+// @Success			200 {object} comm.RespOk
+// @Failure			500 {object} comm.RespErr
+// @Router			/api/tmodloader/archive [post]
+func addArchives(c *gin.Context) {
+	var names []string
+	if err := c.ShouldBindJSON(&names); err != nil {
+		c.JSON(http.StatusBadRequest, comm.NewRespErr(err))
+		return
+	}
+
+	for _, name := range names {
+		if err := createArchive(name); err != nil {
+			c.JSON(http.StatusBadRequest, comm.NewRespErr(err))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, comm.NewRespOk())
+}
+
+// delArchives godoc
+// @Summary			删除存档
+// @Tags			tmodloader
+// @Accept			json
+// @Produce			json
+// @Param			body body ArchiveNameList true "body"
+// @Success			200 {object} comm.RespOk
+// @Failure			500 {object} comm.RespErr
+// @Router			/api/tmodloader/archive [delete]
+func delArchives(c *gin.Context) {
+	var archiveNames []string
+	if err := c.ShouldBindJSON(&archiveNames); err != nil {
+		c.JSON(http.StatusBadRequest, comm.NewRespErr(err))
+		return
+	}
+
+	for _, name := range archiveNames {
+		ap := NewArchivePath(name)
+		if err := comm.RmvPath(ap.Root); err != nil {
+			c.JSON(http.StatusInternalServerError, comm.NewRespErr(err))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, comm.NewRespOk())
+}
+
+// downloadArchive godoc
+// @Summary			下载存档
+// @Tags			tmodloader
+// @Accept			json
+// @Produce			json
+// @Param   		name query string false "name"
+// @Success			200 {object} comm.RespOk
+// @Failure			500 {object} comm.RespErr
+// @Router			/api/tmodloader/archive/download [get]
+func downloadArchive(c *gin.Context) {
+	if ok := upDownLock.TryLock(); !ok {
+		c.JSON(http.StatusBadRequest, comm.NewRespErr(comm.ErrBusy))
+	}
+	defer upDownLock.Unlock()
+
+	name := c.Query("name")
+
+	targetPath := filepath.Join(dataDir, time.Now().Format(time.RFC3339))
+	if err := comm.Compress(targetPath, archiveDir, name); err != nil {
+		c.JSON(http.StatusBadRequest, comm.NewRespErr(err))
+		return
+	}
+	defer func(path string) {
+		if err := comm.RmvPath(path); err != nil {
+			log.Errorf("rmv failed: %s", path)
+		}
+	}(targetPath)
+
+	c.File(targetPath)
+}
+
+func uploadArchive(c *gin.Context) {
+
 }
 
 // getPlayers godoc

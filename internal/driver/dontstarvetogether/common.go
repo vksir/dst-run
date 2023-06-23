@@ -26,12 +26,15 @@ var customTemplateDir = filepath.Join(dataDir, "custom_template")
 var dstServPath = filepath.Join(programDir, "bin64/dontstarve_dedicated_server_nullrenderer_x64")
 var modSetupPath = filepath.Join(programDir, "mods/dedicated_server_mods_setup.lua")
 
-func NewClusterPath() *ClusterPath {
+func NewCurClusterPath() *ClusterPath {
+	archiveName := viper.GetString("dontstarve.archive_name")
+	return NewClusterPath(archiveName)
+}
+
+func NewClusterPath(archiveName string) *ClusterPath {
 	var cp ClusterPath
 
-	clusterName := viper.GetString("dontstarve.archive_name")
-
-	cp.Root = filepath.Join(comm.Home(), ".klei/DoNotStarveTogether", clusterName)
+	cp.Root = filepath.Join(comm.Home(), ".klei/DoNotStarveTogether", archiveName)
 	cp.SettingFile = filepath.Join(cp.Root, "cluster.ini")
 	cp.AdminListFile = filepath.Join(cp.Root, "adminlist.txt")
 	cp.TokenFile = filepath.Join(cp.Root, "cluster_token.txt")

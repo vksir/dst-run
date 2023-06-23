@@ -70,7 +70,12 @@ func getCompatibleTmod(id string) (*Tmod, error) {
 	// 找到兼容性最好的 tmod 文件
 	// 1. 构建版本尽量新
 	// 2. 构建版本早于 tModLoader 版本
-	tModLoaderVersion := data["version"].(string)
+	tModLoaderVersionAny, ok := comm.GetCacheSafe("tml_version")
+	if !ok {
+		return nil, comm.NewErr("cache key not found: tml_version")
+	}
+	tModLoaderVersion := tModLoaderVersionAny.(string)
+
 	tModLoaderVersion = strings.Split(tModLoaderVersion, "v")[1]
 	var latestTmod *Tmod
 	for _, t := range tmods {

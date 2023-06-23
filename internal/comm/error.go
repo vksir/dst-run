@@ -10,6 +10,7 @@ const (
 	ErrSys
 	ErrHttp
 	ErrLocked
+	ErrBusy
 	ErrMax
 )
 

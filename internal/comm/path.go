@@ -22,6 +22,7 @@ var DataDir = filepath.Join(NSHome, "data")
 var LogDir = filepath.Join(NSHome, "log")
 
 var NSConfigPath = filepath.Join(ConfigDir, "neutron-star.toml")
+var CachePath = filepath.Join(DataDir, "cache.json")
 var NSLogPath = filepath.Join(LogDir, "neutron-star.log")
 var DBPath = filepath.Join(DataDir, "neutron-star.db")
 
