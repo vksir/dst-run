@@ -1,6 +1,7 @@
 [ns]
 listen = "0.0.0.0:5800"
 proxy = ""
+steamcmd = "steamcmd"
 
 [dontstarve]
 cluster_name = "Neutron Star"

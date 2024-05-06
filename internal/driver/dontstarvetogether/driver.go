@@ -197,7 +197,7 @@ func installProgram() error {
 
 func createClusterIfNotExist() error {
 	cp := NewCurClusterPath()
-	if _, err := os.Stat(cp.Root); err == os.ErrNotExist {
+	if _, err := os.Stat(cp.Root); os.IsNotExist(err) {
 		return comm.CopyFile(filepath.Join(defaultTemplateDir, "default"), cp.Root)
 	}
 	return nil

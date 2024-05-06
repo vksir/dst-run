@@ -304,7 +304,7 @@ func deployMod() error {
 }
 
 func downloadMods(enableModIds []string) error {
-	cmd := exec.Command("steamcmd", "+login", "anonymous")
+	cmd := exec.Command(viper.GetString("ns.steamcmd"), "+login", "anonymous")
 	for _, id := range enableModIds {
 		cmd.Args = append(cmd.Args, "+workshop_download_item", "1281930", id)
 	}

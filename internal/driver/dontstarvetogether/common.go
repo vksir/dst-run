@@ -58,7 +58,7 @@ func getStartCmd(shard string) *exec.Cmd {
 }
 
 func getInstallCmd() *exec.Cmd {
-	cmd := exec.Command("steamcmd",
+	cmd := exec.Command(viper.GetString("ns.steamcmd"),
 		"+force_install_dir", programDir,
 		"+login", "anonymous",
 		"+app_update", "343050", "validate",
