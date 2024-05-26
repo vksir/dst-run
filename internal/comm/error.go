@@ -1,12 +1,13 @@
 package comm
 
 import (
+	"dst-run/pkg/util"
 	"fmt"
 	"github.com/go-resty/resty/v2"
 )
 
 const (
-	ErrOk = iota
+	CodeOk = iota
 	ErrSys
 	ErrHttp
 	ErrLocked
@@ -17,7 +18,7 @@ const (
 func NewErr(args ...any) *Err {
 	e := Err{
 		Code:  ErrSys,
-		Short: GetShortFile(1),
+		Short: util.GetShortFile(1),
 	}
 
 	for _, a := range args {

@@ -15,7 +15,7 @@ systemctl start dstrun
 ## Swag
 
 ```shell
-swag init -g ./internal/server/server.go -o ./docs/ -p snakecase
+swag init -g ./internal/controller/http/router.go -o ./docs/ -p snakecase
 ```
 
 ## Support

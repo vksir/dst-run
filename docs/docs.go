@@ -15,7 +15,35 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/dontstarve/config": {
+        "/api/dontstarve/cluster/": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dontstarve_cluster"
+                ],
+                "summary": "创建存档",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.DontStarveCluster"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dontstarve/cluster/{id}": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -24,20 +52,20 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "dontstarve"
+                    "dontstarve_cluster"
                 ],
-                "summary": "获取 Config",
+                "summary": "获取存档信息",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dontstarvetogether.Config"
+                            "$ref": "#/definitions/entity.DontStarveCluster"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
@@ -50,17 +78,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "dontstarve"
+                    "dontstarve_cluster"
                 ],
-                "summary": "更新 Config",
+                "summary": "更新存档",
                 "parameters": [
                     {
                         "description": "body",
-                        "name": "body",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dontstarvetogether.Config"
+                            "$ref": "#/definitions/entity.DontStarveCluster"
                         }
                     }
                 ],
@@ -68,190 +96,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
+                            "$ref": "#/definitions/entity.DontStarveCluster"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/dontstarve/control/{action}": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "dontstarve"
-                ],
-                "summary": "服务器控制",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "[ start | stop | restart | update | install ]",
-                        "name": "action",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/dontstarve/event": {
-            "get": {
-                "description": "ReportEvent Type: [ SERVER_ACTIVE ]",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "dontstarve"
-                ],
-                "summary": "获取最近事件",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/core.ReportEvent"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/dontstarve/mod": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "dontstarve"
-                ],
-                "summary": "查看 Mods",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dontstarvetogether.ModMap"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "dontstarve"
-                ],
-                "summary": "更新 Mods",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "[ true | false ]",
-                        "name": "update_mod_info",
-                        "in": "query"
-                    },
-                    {
-                        "description": "body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dontstarvetogether.ModMap"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "dontstarve"
-                ],
-                "summary": "添加 Mods",
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dontstarvetogether.ModMap"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
@@ -264,80 +115,58 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "dontstarve"
+                    "dontstarve_cluster"
                 ],
-                "summary": "删除 Mods",
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
+                "summary": "删除存档",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dontstarve/clusters": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dontstarve_cluster"
+                ],
+                "summary": "获取存档列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "$ref": "#/definitions/entity.DontStarveCluster"
                             }
                         }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
-                        }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
             }
         },
-        "/api/dontstarve/mod/mod_id": {
-            "post": {
-                "consumes": [
-                    "text/plain"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "dontstarve"
-                ],
-                "summary": "通过 Mod ID 添加 Mods",
-                "parameters": [
-                    {
-                        "description": "多个 Mod ID 一行一个",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/dontstarve/runtime/announce/{msg}": {
-            "post": {
+        "/api/dontstarve/config": {
+            "get": {
                 "consumes": [
                     "application/json"
                 ],
@@ -345,7 +174,61 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "dontstarve"
+                    "dontstarve_config"
+                ],
+                "summary": "查看配置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.DontStarveConfig"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dontstarve_config"
+                ],
+                "summary": "更新配置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.DontStarveConfig"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dontstarve/console/announce/{msg}": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dontstarve_console"
                 ],
                 "summary": "全服宣告",
                 "parameters": [
@@ -361,19 +244,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
+                            "$ref": "#/definitions/http.response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
             }
         },
-        "/api/dontstarve/runtime/player": {
+        "/api/dontstarve/console/player": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -382,7 +265,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "dontstarve"
+                    "dontstarve_console"
                 ],
                 "summary": "获取当前玩家",
                 "responses": {
@@ -398,13 +281,13 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
             }
         },
-        "/api/dontstarve/runtime/regenerate": {
+        "/api/dontstarve/console/regenerate": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -413,26 +296,26 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "dontstarve"
+                    "dontstarve_console"
                 ],
                 "summary": "重新生成世界",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
+                            "$ref": "#/definitions/http.response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
             }
         },
-        "/api/dontstarve/runtime/rollback": {
+        "/api/dontstarve/console/rollback{days}": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -441,7 +324,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "dontstarve"
+                    "dontstarve_console"
                 ],
                 "summary": "回滚",
                 "parameters": [
@@ -457,141 +340,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
+                            "$ref": "#/definitions/http.response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
             }
         },
-        "/api/dontstarve/status": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "dontstarve"
-                ],
-                "summary": "获取服务器状态",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dontstarvetogether.Status"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/dontstarve/world_override": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "dontstarve"
-                ],
-                "summary": "获取世界设置",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dontstarvetogether.WorldOverrides"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "dontstarve"
-                ],
-                "summary": "更新世界设置",
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dontstarvetogether.WorldOverrides"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/tmodloader/archive": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tmodloader"
-                ],
-                "summary": "查看存档",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            },
+        "/api/dontstarve/control/{action}": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -600,190 +361,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tmodloader"
-                ],
-                "summary": "添加存档",
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tmodloader"
-                ],
-                "summary": "删除存档",
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/tmodloader/archive/download": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tmodloader"
-                ],
-                "summary": "下载存档",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "name",
-                        "name": "name",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/tmodloader/config": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tmodloader"
-                ],
-                "summary": "获取 Config",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/tmodloader.Config"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tmodloader"
-                ],
-                "summary": "更新 Config",
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/tmodloader.Config"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/tmodloader/control/{action}": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tmodloader"
+                    "dontstarve_control"
                 ],
                 "summary": "服务器控制",
                 "parameters": [
@@ -799,19 +377,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
+                            "$ref": "#/definitions/http.response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
             }
         },
-        "/api/tmodloader/event": {
+        "/api/dontstarve/event": {
             "get": {
                 "description": "ReportEvent Type: [ SERVER_ACTIVE ]",
                 "consumes": [
@@ -821,7 +399,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tmodloader"
+                    "dontstarve_event"
                 ],
                 "summary": "获取最近事件",
                 "responses": {
@@ -830,20 +408,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/core.ReportEvent"
+                                "$ref": "#/definitions/entity.DontStarveEvent"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
             }
         },
-        "/api/tmodloader/mod": {
+        "/api/dontstarve/mod": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -852,20 +430,23 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tmodloader"
+                    "dontstarve_mod"
                 ],
                 "summary": "查看 Mods",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/tmodloader.ModMap"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.DontStarveMod"
+                            }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
@@ -878,7 +459,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tmodloader"
+                    "dontstarve_mod"
                 ],
                 "summary": "更新 Mods",
                 "parameters": [
@@ -890,11 +471,14 @@ const docTemplate = `{
                     },
                     {
                         "description": "body",
-                        "name": "body",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tmodloader.ModMap"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.DontStarveMod"
+                            }
                         }
                     }
                 ],
@@ -902,50 +486,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
+                            "$ref": "#/definitions/http.response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tmodloader"
-                ],
-                "summary": "添加 Mods",
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/tmodloader.ModMap"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
@@ -958,13 +505,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tmodloader"
+                    "dontstarve_mod"
                 ],
                 "summary": "删除 Mods",
                 "parameters": [
                     {
                         "description": "body",
-                        "name": "body",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -979,19 +526,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
+                            "$ref": "#/definitions/http.response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
             }
         },
-        "/api/tmodloader/mod/mod_id": {
+        "/api/dontstarve/mod/mod_id": {
             "post": {
                 "consumes": [
                     "text/plain"
@@ -1000,13 +547,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tmodloader"
+                    "dontstarve_mod"
                 ],
                 "summary": "通过 Mod ID 添加 Mods",
                 "parameters": [
                     {
                         "description": "多个 Mod ID 一行一个",
-                        "name": "body",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -1018,19 +565,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespOk"
+                            "$ref": "#/definitions/http.response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
             }
         },
-        "/api/tmodloader/runtime/player": {
+        "/api/dontstarve/status": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -1039,7 +586,221 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tmodloader"
+                    "dontstarve_status"
+                ],
+                "summary": "获取服务器状态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.DontStarveStatus"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tmodloader/archive/download": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader_cluster"
+                ],
+                "summary": "下载存档",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "name",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tmodloader/cluster/": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader_cluster"
+                ],
+                "summary": "创建存档",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.TModLoaderCluster"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tmodloader/cluster/{id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader_cluster"
+                ],
+                "summary": "获取存档信息",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.TModLoaderCluster"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader_cluster"
+                ],
+                "summary": "更新存档",
+                "parameters": [
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.TModLoaderCluster"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.TModLoaderCluster"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader_cluster"
+                ],
+                "summary": "删除存档",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tmodloader/clusters": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader_cluster"
+                ],
+                "summary": "获取存档列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.TModLoaderCluster"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tmodloader/console/player": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader_console"
                 ],
                 "summary": "获取当前玩家",
                 "responses": {
@@ -1055,7 +816,200 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tmodloader/control/{action}": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader_control"
+                ],
+                "summary": "服务器控制",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[ start | stop | restart | update | install ]",
+                        "name": "action",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tmodloader/mod": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader_mod"
+                ],
+                "summary": "查看 Mods",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.TModLoaderMod"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader_mod"
+                ],
+                "summary": "更新 Mods",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[ true | false ]",
+                        "name": "update_mod_info",
+                        "in": "query"
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.TModLoaderMod"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader_mod"
+                ],
+                "summary": "删除 Mods",
+                "parameters": [
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tmodloader/mod/mod_id": {
+            "post": {
+                "consumes": [
+                    "text/plain"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tmodloader_mod"
+                ],
+                "summary": "通过 Mod ID 添加 Mods",
+                "parameters": [
+                    {
+                        "description": "多个 Mod ID 一行一个",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
@@ -1070,20 +1024,20 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tmodloader"
+                    "tmodloader_status"
                 ],
                 "summary": "获取服务器状态",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/tmodloader.Status"
+                            "$ref": "#/definitions/entity.TModLoaderStatus"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/comm.RespErr"
+                            "$ref": "#/definitions/http.response"
                         }
                     }
                 }
@@ -1091,49 +1045,9 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "comm.RespErr": {
+        "entity.DontStarveCluster": {
             "type": "object",
             "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "detail": {
-                    "type": "string"
-                }
-            }
-        },
-        "comm.RespOk": {
-            "type": "object"
-        },
-        "core.ReportEvent": {
-            "type": "object",
-            "properties": {
-                "level": {
-                    "type": "string"
-                },
-                "msg": {
-                    "type": "string"
-                },
-                "time": {
-                    "type": "integer"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "dontstarvetogether.Config": {
-            "type": "object",
-            "properties": {
-                "admin_list": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "archive_name": {
-                    "type": "string"
-                },
                 "cluster_description": {
                     "type": "string"
                 },
@@ -1143,36 +1057,79 @@ const docTemplate = `{
                 "cluster_password": {
                     "type": "string"
                 },
-                "cluster_token": {
+                "created_at": {
                     "type": "string"
                 },
-                "enable_mods": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "game_mode": {
+                "id": {
                     "type": "string"
                 },
                 "max_players": {
-                    "type": "integer"
+                    "type": "string"
+                },
+                "mods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.DontStarveModInCluster"
+                    }
                 },
                 "pvp": {
-                    "type": "boolean"
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "worlds": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.DontStarveWorld"
+                    }
                 }
             }
         },
-        "dontstarvetogether.Mod": {
+        "entity.DontStarveConfig": {
             "type": "object",
-            "required": [
-                "id"
-            ],
+            "properties": {
+                "cluster_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.DontStarveEvent": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.DontStarveMod": {
+            "type": "object",
             "properties": {
                 "config": {
                     "type": "string"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "mod_id": {
                     "type": "string"
                 },
                 "name": {
@@ -1180,35 +1137,76 @@ const docTemplate = `{
                 },
                 "remark": {
                     "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
-        "dontstarvetogether.ModMap": {
+        "entity.DontStarveModInCluster": {
             "type": "object",
-            "additionalProperties": {
-                "$ref": "#/definitions/dontstarvetogether.Mod"
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "current_config": {
+                    "type": "string"
+                },
+                "dont_starve_cluster_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mod": {
+                    "$ref": "#/definitions/entity.DontStarveMod"
+                },
+                "mod_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
             }
         },
-        "dontstarvetogether.Status": {
+        "entity.DontStarveStatus": {
             "type": "object",
             "properties": {
                 "status": {
                     "type": "integer"
+                },
+                "status_string": {
+                    "type": "string"
                 }
             }
         },
-        "dontstarvetogether.WorldOverrides": {
+        "entity.DontStarveWorld": {
             "type": "object",
             "properties": {
-                "caves": {
+                "created_at": {
                     "type": "string"
                 },
-                "master": {
+                "dont_starve_cluster_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "server_config": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "world_override": {
                     "type": "string"
                 }
             }
         },
-        "tmodloader.Config": {
+        "entity.TModLoaderCluster": {
             "type": "object",
             "properties": {
                 "auto_create": {
@@ -1219,6 +1217,9 @@ const docTemplate = `{
                         3
                     ]
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "difficulty": {
                     "type": "integer",
                     "enum": [
@@ -1228,14 +1229,17 @@ const docTemplate = `{
                         3
                     ]
                 },
-                "enable_mods": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "id": {
+                    "type": "string"
                 },
                 "max_players": {
                     "type": "integer"
+                },
+                "mods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.TModLoaderModInCluster"
+                    }
                 },
                 "password": {
                     "type": "string"
@@ -1248,21 +1252,27 @@ const docTemplate = `{
                 "seed": {
                     "type": "string"
                 },
+                "updated_at": {
+                    "type": "string"
+                },
                 "world_name": {
                     "type": "string"
                 }
             }
         },
-        "tmodloader.Mod": {
+        "entity.TModLoaderMod": {
             "type": "object",
-            "required": [
-                "id"
-            ],
             "properties": {
                 "config": {
                     "type": "string"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "mod_id": {
                     "type": "string"
                 },
                 "name": {
@@ -1270,22 +1280,51 @@ const docTemplate = `{
                 },
                 "remark": {
                     "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
-        "tmodloader.ModMap": {
+        "entity.TModLoaderModInCluster": {
             "type": "object",
-            "additionalProperties": {
-                "$ref": "#/definitions/tmodloader.Mod"
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "current_config": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mod": {
+                    "$ref": "#/definitions/entity.TModLoaderMod"
+                },
+                "mod_id": {
+                    "type": "string"
+                },
+                "t_mod_loader_cluster_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
             }
         },
-        "tmodloader.Status": {
+        "entity.TModLoaderStatus": {
             "type": "object",
             "properties": {
                 "status": {
                     "type": "integer"
+                },
+                "status_string": {
+                    "type": "string"
                 }
             }
+        },
+        "http.response": {
+            "type": "object"
         }
     }
 }`
@@ -1293,11 +1332,11 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "",
-	BasePath:         "",
+	Host:             "0.0.0.0:5800",
+	BasePath:         "/api",
 	Schemes:          []string{},
-	Title:            "Neutron Star",
-	Description:      "",
+	Title:            "Aurora Admin",
+	Description:      "Aurora Admin API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

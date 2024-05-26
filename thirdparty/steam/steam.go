@@ -2,6 +2,8 @@ package steam
 
 import (
 	"dst-run/internal/comm"
+	"dst-run/pkg/log"
+	"dst-run/pkg/util"
 	"fmt"
 	"github.com/antchfx/htmlquery"
 	"net/http"
@@ -10,12 +12,10 @@ import (
 	"time"
 )
 
-var log = comm.GetSugaredLogger()
-
 func GetWorkShopItemInfos(ids []string) ([]*WorkShopItem, error) {
-	log.Debugf("get workshop item info: %v", ids)
+	log.Debug("get workshop item info: %v", ids)
 
-	c := comm.ProxyClient().SetTimeout(5 * time.Second)
+	c := util.ProxyClient().SetTimeout(5 * time.Second)
 
 	var w sync.WaitGroup
 	w.Add(len(ids))
@@ -29,22 +29,22 @@ func GetWorkShopItemInfos(ids []string) ([]*WorkShopItem, error) {
 
 			resp, err := c.R().Get(fmt.Sprintf("https://steamcommunity.com/sharedfiles/filedetails/?id=%s", id))
 			if err != nil {
-				log.Errorf("connect failed: %s", comm.NewErr(err))
+				log.Error("connect failed: %s", comm.NewErr(err))
 				return
 			}
 			if resp.StatusCode() != http.StatusOK {
-				log.Errorf("request failed: %s", comm.NewErr(resp))
+				log.Error("request failed: %s", comm.NewErr(resp))
 				return
 			}
 
 			doc, err := htmlquery.Parse(strings.NewReader(resp.String()))
 			if err != nil {
-				log.Errorf("parse html failed: %s", comm.NewErr(err))
+				log.Error("parse html failed: %s", comm.NewErr(err))
 				return
 			}
 			res := htmlquery.FindOne(doc, "//div[@class='workshopItemTitle']")
 			if res == nil {
-				log.Errorf("xpath failed: %s", id)
+				log.Error("xpath failed: %s", id)
 				return
 			}
 

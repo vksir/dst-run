@@ -1,81 +1,111 @@
+basePath: /api
 definitions:
-  comm.RespErr:
+  entity.DontStarveCluster:
     properties:
-      code:
-        type: integer
-      detail:
-        type: string
-    type: object
-  comm.RespOk:
-    type: object
-  core.ReportEvent:
-    properties:
-      level:
-        type: string
-      msg:
-        type: string
-      time:
-        type: integer
-      type:
-        type: string
-    type: object
-  dontstarvetogether.Config:
-    properties:
-      admin_list:
-        items:
-          type: string
-        type: array
-      archive_name:
-        type: string
       cluster_description:
         type: string
       cluster_name:
         type: string
       cluster_password:
         type: string
-      cluster_token:
+      created_at:
         type: string
-      enable_mods:
-        items:
-          type: string
-        type: array
-      game_mode:
+      id:
         type: string
       max_players:
-        type: integer
+        type: string
+      mods:
+        items:
+          $ref: '#/definitions/entity.DontStarveModInCluster'
+        type: array
       pvp:
-        type: boolean
+        type: string
+      updated_at:
+        type: string
+      worlds:
+        items:
+          $ref: '#/definitions/entity.DontStarveWorld'
+        type: array
     type: object
-  dontstarvetogether.Mod:
+  entity.DontStarveConfig:
+    properties:
+      cluster_token:
+        type: string
+    type: object
+  entity.DontStarveEvent:
+    properties:
+      code:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: string
+      msg:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  entity.DontStarveMod:
     properties:
       config:
         type: string
+      created_at:
+        type: string
       id:
+        type: string
+      mod_id:
         type: string
       name:
         type: string
       remark:
         type: string
-    required:
-    - id
+      updated_at:
+        type: string
     type: object
-  dontstarvetogether.ModMap:
-    additionalProperties:
-      $ref: '#/definitions/dontstarvetogether.Mod'
+  entity.DontStarveModInCluster:
+    properties:
+      created_at:
+        type: string
+      current_config:
+        type: string
+      dont_starve_cluster_id:
+        type: string
+      id:
+        type: string
+      mod:
+        $ref: '#/definitions/entity.DontStarveMod'
+      mod_id:
+        type: string
+      updated_at:
+        type: string
     type: object
-  dontstarvetogether.Status:
+  entity.DontStarveStatus:
     properties:
       status:
         type: integer
+      status_string:
+        type: string
     type: object
-  dontstarvetogether.WorldOverrides:
+  entity.DontStarveWorld:
     properties:
-      caves:
+      created_at:
         type: string
-      master:
+      dont_starve_cluster_id:
+        type: string
+      id:
+        type: string
+      server_config:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+      world_override:
         type: string
     type: object
-  tmodloader.Config:
+  entity.TModLoaderCluster:
     properties:
       auto_create:
         enum:
@@ -83,6 +113,8 @@ definitions:
         - 2
         - 3
         type: integer
+      created_at:
+        type: string
       difficulty:
         enum:
         - 0
@@ -90,12 +122,14 @@ definitions:
         - 2
         - 3
         type: integer
-      enable_mods:
-        items:
-          type: string
-        type: array
+      id:
+        type: string
       max_players:
         type: integer
+      mods:
+        items:
+          $ref: '#/definitions/entity.TModLoaderModInCluster'
+        type: array
       password:
         type: string
       port:
@@ -104,36 +138,158 @@ definitions:
         type: integer
       seed:
         type: string
+      updated_at:
+        type: string
       world_name:
         type: string
     type: object
-  tmodloader.Mod:
+  entity.TModLoaderMod:
     properties:
       config:
         type: string
+      created_at:
+        type: string
       id:
+        type: string
+      mod_id:
         type: string
       name:
         type: string
       remark:
         type: string
-    required:
-    - id
+      updated_at:
+        type: string
     type: object
-  tmodloader.ModMap:
-    additionalProperties:
-      $ref: '#/definitions/tmodloader.Mod'
+  entity.TModLoaderModInCluster:
+    properties:
+      created_at:
+        type: string
+      current_config:
+        type: string
+      id:
+        type: string
+      mod:
+        $ref: '#/definitions/entity.TModLoaderMod'
+      mod_id:
+        type: string
+      t_mod_loader_cluster_id:
+        type: string
+      updated_at:
+        type: string
     type: object
-  tmodloader.Status:
+  entity.TModLoaderStatus:
     properties:
       status:
         type: integer
+      status_string:
+        type: string
     type: object
+  http.response:
+    type: object
+host: 0.0.0.0:5800
 info:
   contact: {}
-  title: Neutron Star
+  description: Aurora Admin API
+  title: Aurora Admin
   version: "1.0"
 paths:
+  /api/dontstarve/cluster/:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.DontStarveCluster'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 创建存档
+      tags:
+      - dontstarve_cluster
+  /api/dontstarve/cluster/{id}:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 删除存档
+      tags:
+      - dontstarve_cluster
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.DontStarveCluster'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 获取存档信息
+      tags:
+      - dontstarve_cluster
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entity.DontStarveCluster'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.DontStarveCluster'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 更新存档
+      tags:
+      - dontstarve_cluster
+  /api/dontstarve/clusters:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.DontStarveCluster'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 获取存档列表
+      tags:
+      - dontstarve_cluster
   /api/dontstarve/config:
     get:
       consumes:
@@ -144,38 +300,117 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dontstarvetogether.Config'
+            $ref: '#/definitions/entity.DontStarveConfig'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 获取 Config
+            $ref: '#/definitions/http.response'
+      summary: 查看配置
       tags:
-      - dontstarve
+      - dontstarve_config
     put:
       consumes:
       - application/json
-      parameters:
-      - description: body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/dontstarvetogether.Config'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/comm.RespOk'
+            $ref: '#/definitions/entity.DontStarveConfig'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 更新 Config
+            $ref: '#/definitions/http.response'
+      summary: 更新配置
       tags:
-      - dontstarve
+      - dontstarve_config
+  /api/dontstarve/console/announce/{msg}:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: msg
+        in: path
+        name: msg
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 全服宣告
+      tags:
+      - dontstarve_console
+  /api/dontstarve/console/player:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 获取当前玩家
+      tags:
+      - dontstarve_console
+  /api/dontstarve/console/regenerate:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 重新生成世界
+      tags:
+      - dontstarve_console
+  /api/dontstarve/console/rollback{days}:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: msg
+        in: path
+        name: times
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 回滚
+      tags:
+      - dontstarve_console
   /api/dontstarve/control/{action}:
     post:
       consumes:
@@ -192,14 +427,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/comm.RespOk'
+            $ref: '#/definitions/http.response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
+            $ref: '#/definitions/http.response'
       summary: 服务器控制
       tags:
-      - dontstarve
+      - dontstarve_control
   /api/dontstarve/event:
     get:
       consumes:
@@ -212,15 +447,15 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/core.ReportEvent'
+              $ref: '#/definitions/entity.DontStarveEvent'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
+            $ref: '#/definitions/http.response'
       summary: 获取最近事件
       tags:
-      - dontstarve
+      - dontstarve_event
   /api/dontstarve/mod:
     delete:
       consumes:
@@ -228,7 +463,7 @@ paths:
       parameters:
       - description: body
         in: body
-        name: body
+        name: request
         required: true
         schema:
           items:
@@ -240,14 +475,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/comm.RespOk'
+            $ref: '#/definitions/http.response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
+            $ref: '#/definitions/http.response'
       summary: 删除 Mods
       tags:
-      - dontstarve
+      - dontstarve_mod
     get:
       consumes:
       - application/json
@@ -257,38 +492,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dontstarvetogether.ModMap'
+            items:
+              $ref: '#/definitions/entity.DontStarveMod'
+            type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
+            $ref: '#/definitions/http.response'
       summary: 查看 Mods
       tags:
-      - dontstarve
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/dontstarvetogether.ModMap'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/comm.RespOk'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 添加 Mods
-      tags:
-      - dontstarve
+      - dontstarve_mod
     put:
       consumes:
       - application/json
@@ -299,24 +512,26 @@ paths:
         type: string
       - description: body
         in: body
-        name: body
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/dontstarvetogether.ModMap'
+          items:
+            $ref: '#/definitions/entity.DontStarveMod'
+          type: array
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/comm.RespOk'
+            $ref: '#/definitions/http.response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
+            $ref: '#/definitions/http.response'
       summary: 更新 Mods
       tags:
-      - dontstarve
+      - dontstarve_mod
   /api/dontstarve/mod/mod_id:
     post:
       consumes:
@@ -324,7 +539,7 @@ paths:
       parameters:
       - description: 多个 Mod ID 一行一个
         in: body
-        name: body
+        name: request
         required: true
         schema:
           type: string
@@ -334,100 +549,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/comm.RespOk'
+            $ref: '#/definitions/http.response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
+            $ref: '#/definitions/http.response'
       summary: 通过 Mod ID 添加 Mods
       tags:
-      - dontstarve
-  /api/dontstarve/runtime/announce/{msg}:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: msg
-        in: path
-        name: msg
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/comm.RespOk'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 全服宣告
-      tags:
-      - dontstarve
-  /api/dontstarve/runtime/player:
-    get:
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              type: string
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 获取当前玩家
-      tags:
-      - dontstarve
-  /api/dontstarve/runtime/regenerate:
-    post:
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/comm.RespOk'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 重新生成世界
-      tags:
-      - dontstarve
-  /api/dontstarve/runtime/rollback:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: msg
-        in: path
-        name: times
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/comm.RespOk'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 回滚
-      tags:
-      - dontstarve
+      - dontstarve_mod
   /api/dontstarve/status:
     get:
       consumes:
@@ -438,128 +567,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dontstarvetogether.Status'
+            $ref: '#/definitions/entity.DontStarveStatus'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
+            $ref: '#/definitions/http.response'
       summary: 获取服务器状态
       tags:
-      - dontstarve
-  /api/dontstarve/world_override:
-    get:
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dontstarvetogether.WorldOverrides'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 获取世界设置
-      tags:
-      - dontstarve
-    put:
-      consumes:
-      - application/json
-      parameters:
-      - description: body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/dontstarvetogether.WorldOverrides'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/comm.RespOk'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 更新世界设置
-      tags:
-      - dontstarve
-  /api/tmodloader/archive:
-    delete:
-      consumes:
-      - application/json
-      parameters:
-      - description: body
-        in: body
-        name: body
-        required: true
-        schema:
-          items:
-            type: string
-          type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/comm.RespOk'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 删除存档
-      tags:
-      - tmodloader
-    get:
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              type: string
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 查看存档
-      tags:
-      - tmodloader
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: body
-        in: body
-        name: body
-        required: true
-        schema:
-          items:
-            type: string
-          type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/comm.RespOk'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 添加存档
-      tags:
-      - tmodloader
+      - dontstarve_status
   /api/tmodloader/archive/download:
     get:
       consumes:
@@ -575,15 +590,50 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/comm.RespOk'
+            $ref: '#/definitions/http.response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
+            $ref: '#/definitions/http.response'
       summary: 下载存档
       tags:
-      - tmodloader
-  /api/tmodloader/config:
+      - tmodloader_cluster
+  /api/tmodloader/cluster/:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.TModLoaderCluster'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 创建存档
+      tags:
+      - tmodloader_cluster
+  /api/tmodloader/cluster/{id}:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 删除存档
+      tags:
+      - tmodloader_cluster
     get:
       consumes:
       - application/json
@@ -593,38 +643,78 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/tmodloader.Config'
+            $ref: '#/definitions/entity.TModLoaderCluster'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 获取 Config
+            $ref: '#/definitions/http.response'
+      summary: 获取存档信息
       tags:
-      - tmodloader
+      - tmodloader_cluster
     put:
       consumes:
       - application/json
       parameters:
       - description: body
         in: body
-        name: body
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/tmodloader.Config'
+          $ref: '#/definitions/entity.TModLoaderCluster'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/comm.RespOk'
+            $ref: '#/definitions/entity.TModLoaderCluster'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 更新 Config
+            $ref: '#/definitions/http.response'
+      summary: 更新存档
       tags:
-      - tmodloader
+      - tmodloader_cluster
+  /api/tmodloader/clusters:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.TModLoaderCluster'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 获取存档列表
+      tags:
+      - tmodloader_cluster
+  /api/tmodloader/console/player:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 获取当前玩家
+      tags:
+      - tmodloader_console
   /api/tmodloader/control/{action}:
     post:
       consumes:
@@ -641,35 +731,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/comm.RespOk'
+            $ref: '#/definitions/http.response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
+            $ref: '#/definitions/http.response'
       summary: 服务器控制
       tags:
-      - tmodloader
-  /api/tmodloader/event:
-    get:
-      consumes:
-      - application/json
-      description: 'ReportEvent Type: [ SERVER_ACTIVE ]'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/core.ReportEvent'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 获取最近事件
-      tags:
-      - tmodloader
+      - tmodloader_control
   /api/tmodloader/mod:
     delete:
       consumes:
@@ -677,7 +746,7 @@ paths:
       parameters:
       - description: body
         in: body
-        name: body
+        name: request
         required: true
         schema:
           items:
@@ -689,109 +758,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/comm.RespOk'
+            $ref: '#/definitions/http.response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
+            $ref: '#/definitions/http.response'
       summary: 删除 Mods
       tags:
-      - tmodloader
-    get:
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/tmodloader.ModMap'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 查看 Mods
-      tags:
-      - tmodloader
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/tmodloader.ModMap'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/comm.RespOk'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 添加 Mods
-      tags:
-      - tmodloader
-    put:
-      consumes:
-      - application/json
-      parameters:
-      - description: '[ true | false ]'
-        in: query
-        name: update_mod_info
-        type: string
-      - description: body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/tmodloader.ModMap'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/comm.RespOk'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 更新 Mods
-      tags:
-      - tmodloader
-  /api/tmodloader/mod/mod_id:
-    post:
-      consumes:
-      - text/plain
-      parameters:
-      - description: 多个 Mod ID 一行一个
-        in: body
-        name: body
-        required: true
-        schema:
-          type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/comm.RespOk'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 通过 Mod ID 添加 Mods
-      tags:
-      - tmodloader
-  /api/tmodloader/runtime/player:
+      - tmodloader_mod
     get:
       consumes:
       - application/json
@@ -802,15 +776,70 @@ paths:
           description: OK
           schema:
             items:
-              type: string
+              $ref: '#/definitions/entity.TModLoaderMod'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
-      summary: 获取当前玩家
+            $ref: '#/definitions/http.response'
+      summary: 查看 Mods
       tags:
-      - tmodloader
+      - tmodloader_mod
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: '[ true | false ]'
+        in: query
+        name: update_mod_info
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/entity.TModLoaderMod'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 更新 Mods
+      tags:
+      - tmodloader_mod
+  /api/tmodloader/mod/mod_id:
+    post:
+      consumes:
+      - text/plain
+      parameters:
+      - description: 多个 Mod ID 一行一个
+        in: body
+        name: request
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.response'
+      summary: 通过 Mod ID 添加 Mods
+      tags:
+      - tmodloader_mod
   /api/tmodloader/status:
     get:
       consumes:
@@ -821,12 +850,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/tmodloader.Status'
+            $ref: '#/definitions/entity.TModLoaderStatus'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/comm.RespErr'
+            $ref: '#/definitions/http.response'
       summary: 获取服务器状态
       tags:
-      - tmodloader
+      - tmodloader_status
 swagger: "2.0"
